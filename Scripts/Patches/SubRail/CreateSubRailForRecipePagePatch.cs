@@ -1,11 +1,13 @@
 ﻿using HarmonyLib;
 using PotionCraft.ManagersSystem;
+using PotionCraft.ObjectBased.InteractiveItem;
 using PotionCraft.ObjectBased.UIElements.Bookmarks;
 using PotionCraft.ObjectBased.UIElements.Books;
 using PotionCraft.ObjectBased.UIElements.Books.RecipeBook;
 using PotionCraft.ObjectBased.UIElements.PotionCraftPanel;
 using PotionCraft.ObjectBased.UIElements.PotionCustomizationPanel;
 using PotionCraft.ScriptableObjects;
+using PotionCraftBookmarkOrganizer.Scripts.ClassOverrides;
 using PotionCraftBookmarkOrganizer.Scripts.Storage;
 using System;
 using System.Collections.Generic;
@@ -78,7 +80,7 @@ namespace PotionCraftBookmarkOrganizer.Scripts.Patches
             subRailPages.transform.parent = pageContainer;
 
 
-            var maskSprite = GenerateSpriteFromImage($"PotionCraftBookmarkOrganizer.InGameImages.Bookmark_organizer_recipe_slot_bottom_left_mask.png");//, new Vector2(0.18f, 0.5f));
+            var maskSprite = GenerateSpriteFromImage($"PotionCraftBookmarkOrganizer.InGameImages.Bookmark_organizer_recipe_slot_bottom_left_mask.png", null, true);//, new Vector2(0.18f, 0.5f));
             if (maskSprite == null) return (null, null);
 
 
@@ -133,12 +135,25 @@ namespace PotionCraftBookmarkOrganizer.Scripts.Patches
                     maskObject.transform.rotation = Quaternion.Euler(0, 0, 270);
                     maskObject.transform.localPosition += new Vector3(0, -1.61f, 0.96f);
                     //maskObject.transform.localPosition += new Vector3(xOffset, 0, 0);
-                    //var debugRenderer = maskObject.AddComponent<SpriteRenderer>();
-                    //debugRenderer.sprite = maskSprite;
-                    //renderer.sortingLayerID = sortingLayerId;
-                    //renderer.sortingLayerName = sortingLayerName;
-                    //renderer.sortingOrder = currentSortOrder - 10;
 
+                    if ( i == 0 )
+                    {
+                        var debugRenderer = maskObject.AddComponent<SpriteRenderer>();
+                        debugRenderer.sprite = maskSprite;
+
+                        var dummyInteractiveItem = maskObject.AddComponent<DummyInteractiveItem>();
+                        dummyInteractiveItem.raycastPriorityLevel = -11000;
+                        dummyInteractiveItem.cursorRadiusCollision = false;
+                        dummyInteractiveItem.showOnlyFingerWhenInteracting = true;
+                        maskObject.AddComponent<PolygonCollider2D>();
+                        maskObject.layer = PotionCraft.Layers.UI;
+
+                        debugRenderer.enabled = false;
+                    }
+
+
+
+                    //AddPolygonCollider2D(maskObject, maskSprite);
                 }
 
                 //Add 20 to the sorting layer to emulate pages used for the main bookmark rails
@@ -157,7 +172,7 @@ namespace PotionCraftBookmarkOrganizer.Scripts.Patches
             return (subRailPages, subRailBookmarkContainer);
         }
 
-        private static Sprite GenerateSpriteFromImage(string path, Vector2? pivot = null)
+        private static Sprite GenerateSpriteFromImage(string path, Vector2? pivot = null, bool createComplexMesh = false)
         {
             var stream = Assembly.GetExecutingAssembly().GetManifestResourceStream(path);
             byte[] data;
@@ -166,17 +181,32 @@ namespace PotionCraftBookmarkOrganizer.Scripts.Patches
                 stream.CopyTo(memoryStream);
                 data = memoryStream.ToArray();
             }
-            var texture = new Texture2D(0, 0, UnityEngine.Experimental.Rendering.GraphicsFormat.R8G8B8A8_UNorm, UnityEngine.Experimental.Rendering.TextureCreationFlags.None)
+            Texture2D texture;
+            if (createComplexMesh)
             {
-                filterMode = FilterMode.Bilinear
-            };
+                texture = new Texture2D(0, 0, TextureFormat.ARGB32, false, false)
+                {
+                    filterMode = FilterMode.Bilinear
+                };
+            }
+            else
+            {
+                texture = new Texture2D(0, 0, UnityEngine.Experimental.Rendering.GraphicsFormat.R8G8B8A8_UNorm, UnityEngine.Experimental.Rendering.TextureCreationFlags.None)
+                {
+                    filterMode = FilterMode.Bilinear
+                };
+            }
+            texture.wrapMode = TextureWrapMode.Clamp;
+            texture.wrapModeU = TextureWrapMode.Clamp;
+            texture.wrapModeV = TextureWrapMode.Clamp;
+            texture.wrapModeW = TextureWrapMode.Clamp;
             if (!texture.LoadImage(data))
             {
                 Plugin.PluginLogger.LogError($"ERROR: Failed to load Bookmark_organizer_recipe_slot.png.");
                 return null;
             }
             var actualPivot = pivot.HasValue ? pivot.Value : new Vector2(0.5f, 0.5f);
-            return Sprite.Create(texture, new Rect(0, 0, texture.width, texture.height), actualPivot, 100, 1, SpriteMeshType.FullRect);
+            return Sprite.Create(texture, new Rect(0, 0, texture.width, texture.height), actualPivot, 100, 1, createComplexMesh ? SpriteMeshType.Tight : SpriteMeshType.FullRect);
         }
     }
 }
