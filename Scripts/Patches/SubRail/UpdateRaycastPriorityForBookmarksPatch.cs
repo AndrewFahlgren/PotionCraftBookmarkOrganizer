@@ -4,6 +4,7 @@ using PotionCraft.ObjectBased.UIElements.Bookmarks;
 using PotionCraft.ObjectBased.UIElements.PotionCraftPanel;
 using PotionCraft.ScriptableObjects;
 using PotionCraftBookmarkOrganizer.Scripts.ClassOverrides;
+using PotionCraftBookmarkOrganizer.Scripts.Services;
 using PotionCraftBookmarkOrganizer.Scripts.Storage;
 using System;
 using System.Linq;
@@ -16,32 +17,31 @@ namespace PotionCraftBookmarkOrganizer.Scripts.Patches
         [HarmonyPatch(typeof(BookmarkRail), "UpdateLayers")]
         public class BookmarkRail_UpdateLayers
         {
-            //static bool Prefix(BookmarkRail __instance)
-            //{
-            //    return Ex.RunSafe(() => UpdateSubRailRequestingLayer(__instance, true));
-            //}
+            static bool Prefix(BookmarkRail __instance)
+            {
+                return Ex.RunSafe(() => AddStaticBookmarkToRailBookmarkList(__instance));
+            }
+
             static void Postfix(BookmarkRail __instance)
             {
                 Ex.RunSafe(() => UpdateRaycastPriorityForBookmarks(__instance));
             }
         }
 
+        private static bool AddStaticBookmarkToRailBookmarkList(BookmarkRail instance)
+        {
+            if (!SubRailService.IsSubRail(instance)) return true;
+            if (StaticStorage.StaticBookmark == null) return true;
+            instance.railBookmarks.Insert(0, StaticStorage.StaticBookmark);
+            return true;
+        }
+
         private static void UpdateRaycastPriorityForBookmarks(BookmarkRail instance)
         {
-            var isSubRail = instance.gameObject.name == StaticStorage.SubRailName;
-            if (!isSubRail) return;
+            if (!SubRailService.IsSubRail(instance)) return;
+            if (instance.railBookmarks.FirstOrDefault() == StaticStorage.StaticBookmark) instance.railBookmarks.RemoveAt(0);
             instance.railBookmarks.ForEach(b => b.SetRaycastPriorityLevel(b.inactiveBookmarkButton.raycastPriorityLevel - 500));
         }
 
-        //private static bool UpdateSubRailRequestingLayer(BookmarkRail instance, bool requesting)
-        //{
-        //    //var isSubRail = instance.gameObject.name == StaticStorage.SubRailName;
-        //    //if (!isSubRail) return true;
-        //    //var originalController = Managers.Potion.recipeBook.bookmarkControllersGroupController.controllers.First().bookmarkController;
-        //    //instance.bookmarkController = requesting
-        //    //                                ? new SubRailBookmarkController { showActiveBookmarkInActiveLayer = originalController.showActiveBookmarkInActiveLayer }
-        //    //                                : originalController;
-        //    return true;
-        //}
     }
 }
