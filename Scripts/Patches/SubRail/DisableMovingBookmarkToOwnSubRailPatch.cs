@@ -34,12 +34,13 @@ namespace PotionCraftBookmarkOrganizer.Scripts.Patches
         {
             if (!StaticStorage.IsLoaded) return true;
             if (instance != StaticStorage.SubRail) return true;
+            if (bookmark.CurrentMovingState == Bookmark.MovingState.Idle) return true;
             var bookmarksListBeforeMoving = typeof(Bookmark).GetField("bookmarksListBeforeMoving", BindingFlags.NonPublic | BindingFlags.Instance).GetValue(bookmark) as List<Bookmark>;
             var bookmarkIndex = bookmarksListBeforeMoving.IndexOf(bookmark);
 
-            RecipeBookService.GetBookmarkStorageRecipeIndex(bookmarkIndex, out bool indexIsParent);
+            var isParent = RecipeBookService.IsBookmarkGroupParent(bookmarkIndex);
             //We need to prevent bookmarks being dragged onto their own subrails and we need to prevent other recipe groups from being dragged onto a subrail at all
-            if (bookmarkIndex != Managers.Potion.recipeBook.currentPageIndex && !indexIsParent) return true;
+            if (bookmarkIndex != Managers.Potion.recipeBook.currentPageIndex && !isParent) return true;
 
             var mouseWorldPosition = Managers.Input.controlsProvider.CurrentMouseWorldPosition;
             var newRail = instance.bookmarkController.rails.Except(new[] { instance })

@@ -37,9 +37,9 @@ namespace PotionCraftBookmarkOrganizer.Scripts.Services
             return rail.gameObject.name == StaticStorage.InvisiRailName;
         }
 
-        public static List<BookmarkStorage> GetSubRailRecipesForSelectedIndex()
+        public static List<BookmarkStorage> GetSubRailRecipesForIndex(int nextPageIndex)
         {
-            var recipeIndex = RecipeBookService.GetBookmarkStorageRecipeIndexForSelectedRecipe();
+            var recipeIndex = RecipeBookService.GetBookmarkStorageRecipeIndex(nextPageIndex);
             if (!StaticStorage.BookmarkGroups.TryGetValue(recipeIndex, out List<BookmarkStorage> saved)) return new List<BookmarkStorage>();
             return saved;
         }
@@ -53,10 +53,11 @@ namespace PotionCraftBookmarkOrganizer.Scripts.Services
             return null;
         }
 
-        public static void UpdateStaticBookmark()
+        public static void UpdateStaticBookmark(int nextPageIndex = -1)
         {
-            var index = RecipeBookService.GetBookmarkStorageRecipeIndexForSelectedRecipe(out bool isparentIndex);
             var recipeBook = Managers.Potion.recipeBook;
+            if (nextPageIndex == -1) nextPageIndex = recipeBook.currentPageIndex;
+            var index = RecipeBookService.GetBookmarkStorageRecipeIndex(nextPageIndex, out bool isparentIndex);
             var savedRecipe = recipeBook.savedRecipes[index];
             //Do not show the static bookmark for empty recipe pages
             if (savedRecipe == null)

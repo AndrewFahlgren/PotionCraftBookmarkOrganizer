@@ -40,9 +40,9 @@ namespace PotionCraftBookmarkOrganizer.Scripts.Patches
             if (!indexIsParent && !isParentRecipe) return true;
 
             var controller = instance.bookmarkControllersGroupController.controllers.First().bookmarkController;
-            var spawnPosition = GetSpawnPosition(controller, BookmarkController.SpaceType.Large) 
-                                ?? GetSpawnPosition(controller, BookmarkController.SpaceType.Medium) 
-                                ?? GetSpawnPosition(controller, BookmarkController.SpaceType.Small) 
+            var spawnPosition = GetSpawnPosition(controller, BookmarkController.SpaceType.Large)
+                                ?? GetSpawnPosition(controller, BookmarkController.SpaceType.Medium)
+                                ?? GetSpawnPosition(controller, BookmarkController.SpaceType.Small)
                                 ?? GetSpawnPosition(controller, BookmarkController.SpaceType.Min);
             if (spawnPosition == null)
             {
@@ -83,10 +83,7 @@ namespace PotionCraftBookmarkOrganizer.Scripts.Patches
             }
 
             //Flip the page to the proper recipe book page
-            instance.curlPageController.HotkeyClicked(nextIndex > instance.currentPageIndex
-                                                        ? instance.currentPageIndex.Distance(nextIndex) <= nextIndex.Distance(instance.currentPageIndex + pagesCount)
-                                                        : instance.currentPageIndex.Distance(nextIndex) >= instance.currentPageIndex.Distance(nextIndex + pagesCount)
-                                                      , nextPageIndex: nextIndex);
+            RecipeBookService.FlipPageToIndex(nextIndex);
 
             //Actually erase the recipe
             index = instance.bookmarkControllersGroupController.GetAllBookmarksList().IndexOf(bookmark);
@@ -114,6 +111,7 @@ namespace PotionCraftBookmarkOrganizer.Scripts.Patches
                 {
                     nextIndex = index2;
                     flag = true;
+                    break;
                 }
             }
             if (!flag) nextIndex = (currentPageIndex >= pagesCount - 1) ? index - 1 : index + 1;

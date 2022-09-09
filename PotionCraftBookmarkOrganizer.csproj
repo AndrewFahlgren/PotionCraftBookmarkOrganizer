@@ -48,6 +48,9 @@
     <Reference Include="PotionCraft.GamepadNavigation">
       <HintPath>lib\PotionCraft.GamepadNavigation.dll</HintPath>
     </Reference>
+    <Reference Include="PotionCraft.InputSystem">
+      <HintPath>lib\PotionCraft.InputSystem.dll</HintPath>
+    </Reference>
     <Reference Include="PotionCraft.Scripts">
       <HintPath>lib\PotionCraft.Scripts.dll</HintPath>
     </Reference>

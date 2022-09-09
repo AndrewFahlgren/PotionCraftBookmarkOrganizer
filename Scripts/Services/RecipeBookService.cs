@@ -1,5 +1,9 @@
-﻿using PotionCraft.ManagersSystem;
+﻿using PotionCraft.Core.Extensions;
+using PotionCraft.InputSystem;
+using PotionCraft.ManagersSystem;
+using PotionCraft.ManagersSystem.Cursor;
 using PotionCraft.ObjectBased.UIElements.Bookmarks;
+using PotionCraft.ObjectBased.UIElements.Books.RecipeBook;
 using PotionCraft.ScriptableObjects;
 using PotionCraftBookmarkOrganizer.Scripts.Storage;
 using System;
@@ -23,9 +27,48 @@ namespace PotionCraftBookmarkOrganizer.Scripts.Services
             {
                 StaticStorage.AddedListeners = true;
                 Managers.Potion.recipeBook.bookmarkControllersGroupController.onBookmarksRearranged.AddListener(BookmarksRearranged);
-                Managers.Potion.gameObject.AddComponent<StaticStorageDebug>();
-
+                Managers.Potion.gameObject.AddComponent<BookmarkOrganizerManager>();
+                var asset = PotionCraft.Settings.Settings<CursorManagerSettings>.Asset;
+                StaticStorage.HotkeyUp = CommandInvokeRepeater.GetNewCommandInvokeRepeater(asset.invokeRepeaterSettings, new List<Command>()
+                {
+                  Commands.roomUp
+                });
+                StaticStorage.HotkeyDown = CommandInvokeRepeater.GetNewCommandInvokeRepeater(asset.invokeRepeaterSettings, new List<Command>()
+                {
+                  Commands.roomDown
+                });
             }
+        }
+
+        public static void FlipPageToNextGroup(bool flipForward)
+        {
+            if (!Managers.Potion.recipeBook.isActiveAndEnabled) return;
+            var nextGroupIndex = GetNextNonSubRecipeIndex(flipForward);
+            if (nextGroupIndex == Managers.Potion.recipeBook.currentPageIndex) return;
+            FlipPageToIndex(nextGroupIndex);
+        }
+
+        private static int GetNextNonSubRecipeIndex(bool moveForward)
+        {
+            var recipeBook = Managers.Potion.recipeBook;
+            var currentPageIndex = recipeBook.currentPageIndex;
+            var pagesCount = recipeBook.GetPagesCount();
+            var nextIndex = currentPageIndex;
+            //Start the index at one so we don't consider the current recipe when checking for the next non sub recipe
+            for (var i = 1; i <= pagesCount; ++i)
+            {
+                var indexOffset = i * (moveForward ? 1 : -1);
+                var actualIndex = (currentPageIndex + indexOffset + pagesCount) % pagesCount;
+                Plugin.PluginLogger.LogInfo($"GetNextNonSubRecipeIndex - actualIndex: {actualIndex} - currentPageIndex: {currentPageIndex}");
+                GetBookmarkStorageRecipeIndex(actualIndex, out bool indexIsparent);
+                if (!indexIsparent)
+                {
+                    nextIndex = actualIndex;
+                    break;
+                }
+            }
+            Plugin.PluginLogger.LogInfo($"GetNextNonSubRecipeIndex - nextIndex: {nextIndex} - currentPageIndex: {currentPageIndex}");
+            return nextIndex;
         }
 
         private static bool currentlyRearranging;
@@ -113,12 +156,17 @@ namespace PotionCraftBookmarkOrganizer.Scripts.Services
 
         public static int GetBookmarkStorageRecipeIndexForSelectedRecipe()
         {
-            return GetBookmarkStorageRecipeIndexForSelectedRecipe(out bool _);
+            return GetBookmarkStorageRecipeIndex(Managers.Potion.recipeBook.currentPageIndex, out bool _);
         }
 
         public static int GetBookmarkStorageRecipeIndexForSelectedRecipe(out bool indexIsParent)
         {
             return GetBookmarkStorageRecipeIndex(Managers.Potion.recipeBook.currentPageIndex, out indexIsParent);
+        }
+
+        public static int GetBookmarkStorageRecipeIndex(int recipeIndex)
+        {
+            return GetBookmarkStorageRecipeIndex(recipeIndex, out bool _);
         }
 
         public static int GetBookmarkStorageRecipeIndex(int recipeIndex, out bool indexIsParent)
@@ -137,6 +185,16 @@ namespace PotionCraftBookmarkOrganizer.Scripts.Services
         {
             if (!StaticStorage.BookmarkGroups.TryGetValue(index, out List<BookmarkStorage> subBookmarks)) return false;
             return subBookmarks.Count > 0;
+        }
+
+        public static void FlipPageToIndex(int nextIndex)
+        {
+            var recipeBook = Managers.Potion.recipeBook;
+            var pagesCount = recipeBook.GetPagesCount();
+            recipeBook.curlPageController.HotkeyClicked(nextIndex > recipeBook.currentPageIndex
+                                                            ? recipeBook.currentPageIndex.Distance(nextIndex) <= nextIndex.Distance(recipeBook.currentPageIndex + pagesCount)
+                                                            : recipeBook.currentPageIndex.Distance(nextIndex) >= recipeBook.currentPageIndex.Distance(nextIndex + pagesCount)
+                                                        , nextPageIndex: nextIndex);
         }
     }
 }

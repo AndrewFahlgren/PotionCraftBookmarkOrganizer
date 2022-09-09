@@ -1,4 +1,5 @@
-﻿using PotionCraft.ObjectBased.UIElements.Bookmarks;
+﻿using PotionCraft.InputSystem;
+using PotionCraft.ObjectBased.UIElements.Bookmarks;
 using PotionCraft.ScriptableObjects;
 using System.Collections.Generic;
 using UnityEngine;
@@ -24,5 +25,8 @@ namespace PotionCraftBookmarkOrganizer.Scripts.Storage
         public static bool RemovingSubRailBookMarksForPageTurn;
         public static bool AddingSubRailBookMarksForPageTurn;
         public static bool IsLoaded;
+
+        public static CommandInvokeRepeater HotkeyUp;
+        public static CommandInvokeRepeater HotkeyDown;
     }
 }
