@@ -42,6 +42,9 @@
   </ItemGroup>
   
   <ItemGroup>
+    <Reference Include="Newtonsoft.Json">
+      <HintPath>lib\Newtonsoft.Json.dll</HintPath>
+    </Reference>
     <Reference Include="PotionCraft.Core">
       <HintPath>lib\PotionCraft.Core.dll</HintPath>
     </Reference>

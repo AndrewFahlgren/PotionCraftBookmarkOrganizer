@@ -1,32 +1,26 @@
 ﻿using HarmonyLib;
 using PotionCraft.ManagersSystem;
+using PotionCraft.ManagersSystem.SaveLoad;
 using PotionCraft.ObjectBased.RecipeMap;
 using PotionCraft.ObjectBased.UIElements.PotionCraftPanel;
 using PotionCraft.ScriptableObjects;
 using PotionCraftBookmarkOrganizer.Scripts.Services;
 using PotionCraftBookmarkOrganizer.Scripts.Storage;
 using System;
+using System.IO;
 using System.Linq;
 
 namespace PotionCraftBookmarkOrganizer.Scripts.Patches
 {
-    public class LoadBookmarkGroupingDataFromSaveFilePatch 
+    public class RetrieveBookmarkGroupingDataFromSavedStatePatch
     { 
-        [HarmonyPatch(typeof(MapState), "LoadState")]
-        public class MapState_LoadState
+        [HarmonyPatch(typeof(SaveLoadManager), "LoadSelectedState")]
+        public class SaveLoadManager_LoadSelectedState
         {
-            //static bool Prefix()
-            //{
-            //    return Ex.RunSafe(() => true);
-            //}
-            static void Postfix()
+            static bool Prefix(Type type)
             {
-                Ex.RunSafe(() => LoadBookmarkGroupingDataFromSaveFile());
+                return Ex.RunSafe(() => SaveLoadService.RetreiveStoredBookmarkGroups(type));
             }
-        }
-
-        private static void LoadBookmarkGroupingDataFromSaveFile()
-        {
         }
     }
 }

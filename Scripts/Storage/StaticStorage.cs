@@ -8,6 +8,8 @@ namespace PotionCraftBookmarkOrganizer.Scripts.Storage
 {
     public static class StaticStorage
     {
+        public const string BookmarkGroupsJsonSaveName = "FahlgorithmBookmarkOrganizer";
+
         public const string SubRailName = "BottomToTopSubRail";
         public const string InvisiRailName = "BottomToTopInvisiRail";
 
@@ -28,5 +30,7 @@ namespace PotionCraftBookmarkOrganizer.Scripts.Storage
 
         public static CommandInvokeRepeater HotkeyUp;
         public static CommandInvokeRepeater HotkeyDown;
+
+        public static string StateJsonString;
     }
 }

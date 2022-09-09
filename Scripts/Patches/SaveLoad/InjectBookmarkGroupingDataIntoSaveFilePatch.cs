@@ -1,23 +1,21 @@
 ﻿using HarmonyLib;
 using PotionCraft.ManagersSystem;
 using PotionCraft.ObjectBased.UIElements.PotionCraftPanel;
+using PotionCraft.SaveLoadSystem;
 using PotionCraft.ScriptableObjects;
+using PotionCraftBookmarkOrganizer.Scripts.Services;
 using System.Linq;
 
 namespace PotionCraftBookmarkOrganizer.Scripts.Patches
 {
     public class InjectBookmarkGroupingDataIntoSaveFilePatch
     { 
-        [HarmonyPatch(typeof(PotionInventoryObject), "CanBeInteractedNow")]
-        public class PotionInventoryObject_CanBeInteractedNow
+        [HarmonyPatch(typeof(SavedState), "ToJson")]
+        public class SavedState_ToJson
         {
-            static bool Prefix()
+            static void Postfix(ref string __result)
             {
-                return Ex.RunSafe(() => true);
-            }
-            static void Postfix()
-            {
-                Ex.RunSafe(() => { });
+                SaveLoadService.StoreBookmarkGroups(ref __result);
             }
         }
     }

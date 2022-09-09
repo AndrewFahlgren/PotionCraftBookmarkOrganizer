@@ -26,13 +26,13 @@ namespace PotionCraftBookmarkOrganizer.Scripts.Storage
             if (StaticStorage.HotkeyDown == null || StaticStorage.HotkeyUp == null) return;
             if (Commands.roomDown.State == State.JustDowned)
             {
-                RecipeBookService.FlipPageToNextGroup(true);
-                StaticStorage.HotkeyDown.SetAction(repeater => RecipeBookService.FlipPageToNextGroup(true)).StopWhen(() => !CanHotkeysBeUsed());
+                RecipeBookService.FlipPageToNextGroup(false);
+                StaticStorage.HotkeyDown.SetAction(repeater => RecipeBookService.FlipPageToNextGroup(false)).StopWhen(() => !CanHotkeysBeUsed());
             }
             else if (Commands.roomUp.State == State.JustDowned)
             { 
-                RecipeBookService.FlipPageToNextGroup(false);
-                StaticStorage.HotkeyUp.SetAction(repeater => RecipeBookService.FlipPageToNextGroup(false)).StopWhen(() => !CanHotkeysBeUsed());
+                RecipeBookService.FlipPageToNextGroup(true);
+                StaticStorage.HotkeyUp.SetAction(repeater => RecipeBookService.FlipPageToNextGroup(true)).StopWhen(() => !CanHotkeysBeUsed());
             }
         }
 

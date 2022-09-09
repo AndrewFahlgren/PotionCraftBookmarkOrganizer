@@ -29,21 +29,21 @@ namespace PotionCraftBookmarkOrganizer.Scripts.Patches
             }
         }
 
-        //private static int currentRecipeBookIndex = -1;
-        //TODO there are likely other places we need to utilize currentRecipeBookIndex. When flipping fast we don't always populate the correct bookmarks
+        private static float lastPageTurnTime = 0;
         private static bool UpdateSubRailBookmarksForSelectedRecipe(CurlPageController instance, bool toTheLeft, int nextPageIndex)
         {
             if (instance.book != Managers.Potion.recipeBook) return true;
             //When moving between pages quickly the recipe book index may not be up to date. It only updates once the page flipping animation has finished.
             //If these indexes are out of sync it is because we quickly flipped past the last page. In this case we do not need to update sub bookmarks since nothing had a chance to change.
-            if (instance.CurrentState != CurlPageController.State.Flipping) //TODO this logic may need to be updated a bit to account for our revalation down below with multiple page flips in quick succession
+            //If you just hold down the hotkey eventually things move so fast we start getting idle states thrown in. Here we have an additional failsafe to make sure we don't update if we just flipped a page by checking time.
+            if (instance.CurrentState == CurlPageController.State.Idle && (Time.fixedTime - lastPageTurnTime) > 0.5f)
             {
                 var recipeAtIndex = Managers.Potion.recipeBook.savedRecipes[instance.book.currentPageIndex];
                 Plugin.PluginLogger.LogInfo($"UpdateSubRailBookmarksForSelectedRecipe - Updating for: {recipeAtIndex?.GetLocalizedTitle()} - subCount: {StaticStorage.SubRail.railBookmarks.Count}");
                 RecipeBookService.UpdateBookmarkGroupsForCurrentRecipe();
             }
+            lastPageTurnTime = Time.fixedTime;
             MoveBookmarksToAndFromInvisiRail(instance, toTheLeft, nextPageIndex);
-            //currentRecipeBookIndex = nextPageIndex;
             return true;
         }
 
@@ -53,13 +53,11 @@ namespace PotionCraftBookmarkOrganizer.Scripts.Patches
             {
                 var indexModifier = 0;
                 //If we are currently flipping we need to make adjustments to the nextpageindex to conteract the cancelled
-                if (instance.CurrentState == CurlPageController.State.Flipping)
+                if (instance.CurrentState == CurlPageController.State.Flipping || instance.CurrentState == CurlPageController.State.FlippingBack)
                 {
-                    if (CurlPageController.IsRightCorner(instance.corner) ^ toTheLeft)
-                    {
-
-                    }
-                    else
+                    var flippingDirectionChanged = CurlPageController.IsRightCorner(instance.corner) ^ toTheLeft;
+                    var shouldModifyIndex = instance.CurrentState == CurlPageController.State.Flipping ? !flippingDirectionChanged : flippingDirectionChanged;
+                    if (shouldModifyIndex)
                     {
                         indexModifier = CurlPageController.IsRightCorner(instance.corner) ? 1 : -1;
                     }
@@ -95,8 +93,6 @@ namespace PotionCraftBookmarkOrganizer.Scripts.Patches
 
             StaticStorage.AddingSubRailBookMarksForPageTurn = true;
 
-            //var recipeAtIndex = Managers.Potion.recipeBook.savedRecipes[index];
-            //Plugin.PluginLogger.LogInfo($"MoveBookmarksToAndFromInvisiRail - Updating for: {recipeAtIndex?.GetLocalizedTitle()} - subCount: {saved.Count}");
             saved.ForEach(savedBookmark =>
             {
                 SubRailService.ConnectBookmarkToRail(StaticStorage.SubRail, savedBookmark.bookmark, savedBookmark.savedBookmark.SerializedBookmark.position);
