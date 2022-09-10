@@ -14,6 +14,8 @@ namespace PotionCraftBookmarkOrganizer.Scripts.Storage
         public const string SubRailName = "BottomToTopSubRail";
         public const string InvisiRailName = "BottomToTopInvisiRail";
 
+        public const float SubRailYCuttof = 1f;
+
         public static Dictionary<int, List<BookmarkStorage>> BookmarkGroups = new();
 
         public static BookmarkRail SubRail;

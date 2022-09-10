@@ -40,6 +40,7 @@ namespace PotionCraftBookmarkOrganizer.Scripts.Patches
             if (StaticStorage.SubRail != null)
             {
                 CreateStaticRailCopyForPage(parentPage);
+                ShrinkDescriptionBox(parentPage);
                 return;
             }
             RecipeBookService.SetupListeners(); //TODO move to a more appropriate spot
@@ -48,6 +49,7 @@ namespace PotionCraftBookmarkOrganizer.Scripts.Patches
             var containers = SetupBookmarkContainer(parentPage);
             SetupRail(containers.Item1, containers.Item2);
             CreateStaticRailCopyForPage(parentPage);
+            ShrinkDescriptionBox(parentPage);
         }
 
         private static void SetupRail(GameObject subRailPages, GameObject subRailBookmarkContainer)
@@ -193,8 +195,9 @@ namespace PotionCraftBookmarkOrganizer.Scripts.Patches
             StaticStorage.SubRailLayers.Reverse();
 
             //Position the sprite at the bottom left corner of the page
-            subRailBookmarkContainer.transform.localPosition = new Vector2(-8.17f, -4.1f);
-            subRailPages.transform.localPosition = new Vector2(-7.4718f, - 4.1f);
+            subRailBookmarkContainer.transform.localPosition = new Vector2(-7.594f, -4.07f); //new Vector2(-8.17f, -4.1f);
+
+            subRailPages.transform.localPosition = new Vector2(-7.165f, -4.07f); //new Vector2(-7.181f, -4.082f); TODO apply this everywhere else
             return (subRailPages, subRailBookmarkContainer);
         }
 
@@ -202,7 +205,7 @@ namespace PotionCraftBookmarkOrganizer.Scripts.Patches
         {
             var staticParent = new GameObject("StaticSubRail");
             staticParent.transform.parent = parentPage.transform;
-            staticParent.transform.localPosition = new Vector2(-3.459f, -4.1f);
+            staticParent.transform.localPosition = new Vector2(-3.443f, -4.07f);//new Vector2(-3.459f, -4.1f);
             var sortingCopyFrom = parentPage.transform.parent.Find("Scratches").GetComponent<SpriteRenderer>();
             var sortingGroup = staticParent.AddComponent<SortingGroup>();
             sortingGroup.sortingLayerID = sortingCopyFrom.sortingLayerID;
@@ -210,11 +213,11 @@ namespace PotionCraftBookmarkOrganizer.Scripts.Patches
             sortingGroup.sortingOrder = sortingCopyFrom.sortingOrder + 1;
 
             var staticPages = UnityEngine.Object.Instantiate(StaticStorage.SubRailPages, staticParent.transform);
-            staticPages.transform.localPosition = new Vector2(0.0025f, 0f);
+            staticPages.transform.localPosition = new Vector2(0.2933f, 0f);
             staticPages.SetActive(false);
             var staticBookmarkContainer = new GameObject("StaticBookmarkContainer");
             staticBookmarkContainer.transform.parent = staticParent.transform;
-            staticBookmarkContainer.transform.localPosition = new Vector2(-0.6982f, 0f);
+            staticBookmarkContainer.transform.localPosition = new Vector2(-0.1365f, 0f);//new Vector2(-0.6982f, 0f);
             staticBookmarkContainer.SetActive(false);
             StaticStorage.StaticRails[parentPage] = (staticBookmarkContainer, staticPages);
         }
@@ -273,6 +276,18 @@ namespace PotionCraftBookmarkOrganizer.Scripts.Patches
             }
             var actualPivot = pivot.HasValue ? pivot.Value : new Vector2(0.5f, 0.5f);
             return Sprite.Create(texture, new Rect(0, 0, texture.width, texture.height), actualPivot, 100, 1, createComplexMesh ? SpriteMeshType.Tight : SpriteMeshType.FullRect);
+        }
+
+        private static void ShrinkDescriptionBox(RecipeBookLeftPageContent parentPage)
+        {
+            var descriptionBorder = parentPage.transform.Find("Description");
+            var inputFieldCanvasLines = parentPage.potionCustomizationPanel.transform.Find("InputFieldCanvas").transform.Find("Maskable");
+            var positionOffset = new Vector3(0.3309f, 0);
+            descriptionBorder.transform.localPosition += positionOffset;
+            inputFieldCanvasLines.transform.localPosition += positionOffset;
+            var scale = new Vector3(0.9018f, 1f, 1f);
+            descriptionBorder.transform.localScale = scale;
+            inputFieldCanvasLines.transform.localScale = scale;
         }
     }
 }
