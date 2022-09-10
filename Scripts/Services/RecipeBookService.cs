@@ -87,6 +87,7 @@ namespace PotionCraftBookmarkOrganizer.Scripts.Services
             BookmarksRearranged();
         }
 
+        //TODO for some reason this is rearranging wrong. Lets put in debug statemtns here. Is this a result of the save changes or something that has been wrong for a long time?
         private static async void BookmarksRearranged()
         {
             Plugin.PluginLogger.LogInfo("BookmarksRearranged");
@@ -112,7 +113,7 @@ namespace PotionCraftBookmarkOrganizer.Scripts.Services
                         if (recipeIndexForCurrentGroupUpdate == oldIndex) recipeIndexForCurrentGroupUpdate = newIndex;
                         //This will recreate the old bookmark dictionary making sure to update any indexes along the way
                         if (oldBookmarks.ContainsKey(oldIndex)) newBookmarks[newIndex] = oldBookmarks[oldIndex];
-                        if (intList[newIndex] == newIndex) continue;
+                        if (oldIndex == newIndex) continue;
                         if (!oldStoredBookmarks.TryGetValue(oldIndex, out BookmarkStorage affectedBookmark)) continue;
                         affectedBookmark.recipeIndex = newIndex;
                     }
@@ -189,6 +190,7 @@ namespace PotionCraftBookmarkOrganizer.Scripts.Services
 
         public static void FlipPageToIndex(int nextIndex)
         {
+            if (Managers.Cursor.grabbedInteractiveItem is InactiveBookmarkButton) return;
             var recipeBook = Managers.Potion.recipeBook;
             var pagesCount = recipeBook.GetPagesCount();
             recipeBook.curlPageController.HotkeyClicked(nextIndex > recipeBook.currentPageIndex

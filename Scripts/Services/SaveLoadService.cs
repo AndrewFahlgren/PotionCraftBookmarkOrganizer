@@ -71,6 +71,9 @@ namespace PotionCraftBookmarkOrganizer.Scripts.Services
 
             StaticStorage.BookmarkGroups = deserialized.BookmarkGroups;
 
+            Plugin.PluginLogger.LogInfo($"RetreiveStoredBookmarkGroups - {deserialized.BookmarkGroups.Count}");
+
+
             return true;
         }
 
@@ -89,6 +92,7 @@ namespace PotionCraftBookmarkOrganizer.Scripts.Services
         /// </summary>
         public static bool ClearFileSpecificDataOnFileLoad()
         {
+            Plugin.PluginLogger.LogInfo("ClearFileSpecificDataOnFileLoad");
             StaticStorage.BookmarkGroups.Clear();
             return true;
         }

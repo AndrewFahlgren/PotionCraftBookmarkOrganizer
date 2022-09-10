@@ -35,14 +35,19 @@ namespace PotionCraftBookmarkOrganizer.Scripts.Patches
 
         private static void CreateSubRailForRecipePage(PotionCustomizationPanel instance)
         {
-            if (StaticStorage.SubRail != null) return;
-            RecipeBookService.SetupListeners(); //TODO move to a more appropriate spot
             var parentPage = instance.gameObject.GetComponentInParent<RecipeBookLeftPageContent>();
             if (parentPage == null) return;
+            if (StaticStorage.SubRail != null)
+            {
+                CreateStaticRailCopyForPage(parentPage);
+                return;
+            }
+            RecipeBookService.SetupListeners(); //TODO move to a more appropriate spot
 
             SetupInvisiRail(); //TODO once we start making multiple sub rails here this needs to move to a more appropriate spot where it is called once
             var containers = SetupBookmarkContainer(parentPage);
             SetupRail(containers.Item1, containers.Item2);
+            CreateStaticRailCopyForPage(parentPage);
         }
 
         private static void SetupRail(GameObject subRailPages, GameObject subRailBookmarkContainer)
@@ -125,6 +130,7 @@ namespace PotionCraftBookmarkOrganizer.Scripts.Patches
         {
             var subRailBookmarkContainer = new GameObject("SubRailBookmarkContainer");
             var subRailPages = new GameObject("SubRailPages");
+            StaticStorage.SubRailPages = subRailPages;
             var pageContainer = Managers.Potion.recipeBook.transform.Find("ContentContainer").Find("BackgroundPages");
             subRailPages.transform.parent = pageContainer;
 
@@ -187,9 +193,30 @@ namespace PotionCraftBookmarkOrganizer.Scripts.Patches
             StaticStorage.SubRailLayers.Reverse();
 
             //Position the sprite at the bottom left corner of the page
-            subRailBookmarkContainer.transform.localPosition = new Vector2(-8.18f, -4.12f);
-            subRailPages.transform.localPosition = new Vector2(-7.4818f, - 4.12f);
+            subRailBookmarkContainer.transform.localPosition = new Vector2(-8.17f, -4.1f);
+            subRailPages.transform.localPosition = new Vector2(-7.4718f, - 4.1f);
             return (subRailPages, subRailBookmarkContainer);
+        }
+
+        private static void CreateStaticRailCopyForPage(RecipeBookLeftPageContent parentPage)
+        {
+            var staticParent = new GameObject("StaticSubRail");
+            staticParent.transform.parent = parentPage.transform;
+            staticParent.transform.localPosition = new Vector2(-3.459f, -4.1f);
+            var sortingCopyFrom = parentPage.transform.parent.Find("Scratches").GetComponent<SpriteRenderer>();
+            var sortingGroup = staticParent.AddComponent<SortingGroup>();
+            sortingGroup.sortingLayerID = sortingCopyFrom.sortingLayerID;
+            sortingGroup.sortingLayerName = sortingCopyFrom.sortingLayerName;
+            sortingGroup.sortingOrder = sortingCopyFrom.sortingOrder + 1;
+
+            var staticPages = UnityEngine.Object.Instantiate(StaticStorage.SubRailPages, staticParent.transform);
+            staticPages.transform.localPosition = new Vector2(0.0025f, 0f);
+            staticPages.SetActive(false);
+            var staticBookmarkContainer = new GameObject("StaticBookmarkContainer");
+            staticBookmarkContainer.transform.parent = staticParent.transform;
+            staticBookmarkContainer.transform.localPosition = new Vector2(-0.6982f, 0f);
+            staticBookmarkContainer.SetActive(false);
+            StaticStorage.StaticRails[parentPage] = (staticBookmarkContainer, staticPages);
         }
 
         private static (GameObject, GameObject) CreateBookmarkLayer(GameObject subRailBookmarkContainer, Sprite maskSprite, int sortingLayerId, string sortingLayerName, int currentSortOrder, string layerName)

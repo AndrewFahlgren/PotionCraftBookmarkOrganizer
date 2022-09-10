@@ -1,5 +1,6 @@
 ﻿using PotionCraft.InputSystem;
 using PotionCraft.ObjectBased.UIElements.Bookmarks;
+using PotionCraft.ObjectBased.UIElements.Books.RecipeBook;
 using PotionCraft.ScriptableObjects;
 using System.Collections.Generic;
 using UnityEngine;
@@ -16,8 +17,10 @@ namespace PotionCraftBookmarkOrganizer.Scripts.Storage
         public static Dictionary<int, List<BookmarkStorage>> BookmarkGroups = new();
 
         public static BookmarkRail SubRail;
+        public static GameObject SubRailPages;
         public static BookmarkRail InvisiRail;
         public static Bookmark StaticBookmark;
+        public static Dictionary<RecipeBookLeftPageContent, (GameObject, GameObject)> StaticRails = new ();
 
         public static List<Transform> SubRailLayers = new();
         public static Transform InvisiRailLayer;

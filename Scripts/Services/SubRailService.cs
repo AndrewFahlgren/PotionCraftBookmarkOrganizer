@@ -86,5 +86,16 @@ namespace PotionCraftBookmarkOrganizer.Scripts.Services
             rail.SortBookmarksInClockwiseOrder();
             rail.bookmarkController.CallOnBookmarksRearrangeIfNecessary(bookmarksListBeforeMoving);
         }
+
+        public static void ShowSubRailAfterFlip()
+        {
+            StaticStorage.SubRail.gameObject.SetActive(true);
+            StaticStorage.SubRailPages.gameObject.SetActive(true);
+            StaticStorage.StaticRails.Values.ToList().ForEach(r =>
+            {
+                r.Item1.SetActive(false);
+                r.Item2.SetActive(false);
+            });
+        }
     }
 }
