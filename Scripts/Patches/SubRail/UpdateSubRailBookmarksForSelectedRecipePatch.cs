@@ -57,7 +57,6 @@ namespace PotionCraftBookmarkOrganizer.Scripts.Patches
             static void Postfix(Book __instance, int pageIndex)
             {
                 Ex.RunSafe(() => MoveBookmarksToAndFromInvisiRail(__instance.curlPageController, pageIndex, false));
-                //return true;
             }
         }
 
@@ -88,18 +87,9 @@ namespace PotionCraftBookmarkOrganizer.Scripts.Patches
             MoveBookmarksToAndFromInvisiRail(recipeBook.curlPageController, recipeBook.currentPageIndex, false);
         }
 
-        //private static bool HotkeyClicked;
-        //private static bool SetHotkeyClickedFlag(bool hotkeyClicked)
-        //{
-        //    HotkeyClicked = hotkeyClicked;
-        //    return true;
-        //}
-
         private static void MoveBookmarksToAndFromInvisiRail(CurlPageController instance, int nextPageIndex, bool showStaticRails = true)
         {
             if (instance.book != Managers.Potion.recipeBook) return;
-            //TODO instead of this just cleanup when it stops being hovered
-            //if (!HotkeyClicked && Managers.Cursor.grabbedInteractiveItem == null) return;
 
             if (showStaticRails)
             {
