@@ -79,6 +79,12 @@ namespace PotionCraftBookmarkOrganizer.Scripts.Services
             //if (StaticStorage.StaticBookmark.isMirrored != isOriginalMirrored) StaticStorage.StaticBookmark.SetMirrored(true);
         }
 
+        public static int GetPagesCountWithoutSpecialRails()
+        {
+            var controller = Managers.Potion.recipeBook.bookmarkControllersGroupController.controllers.First().bookmarkController;
+            return controller.rails.Except(new[] { StaticStorage.SubRail, StaticStorage.InvisiRail }).Sum(r => r.railBookmarks.Count);
+        }
+
         public static void ConnectBookmarkToRail(BookmarkRail rail, Bookmark bookmark, Vector2 position)
         {
             var bookmarksListBeforeMoving = StaticStorage.SubRail.bookmarkController.GetAllBookmarksList();

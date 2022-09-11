@@ -173,10 +173,10 @@ namespace PotionCraftBookmarkOrganizer.Scripts.Services
         public static int GetBookmarkStorageRecipeIndex(int recipeIndex, out bool indexIsParent)
         {
             indexIsParent = false;
-            var storedParentIndex = StaticStorage.BookmarkGroups.Select(bg => new { bg.Key, bg.Value }).FirstOrDefault(bg => bg.Value.Any(b => b.recipeIndex == recipeIndex))?.Key;
-            if (storedParentIndex != null)
+            var storedParentIndex = StaticStorage.BookmarkGroups.Keys.Where(k => StaticStorage.BookmarkGroups[k].Any(b => b.recipeIndex == recipeIndex)).ToList();
+            if (storedParentIndex.Any())
             {
-                recipeIndex = storedParentIndex.Value;
+                recipeIndex = storedParentIndex.First();
                 indexIsParent = true;
             }
             return recipeIndex;

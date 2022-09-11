@@ -39,17 +39,15 @@ namespace PotionCraftBookmarkOrganizer.Scripts.Patches
             var bookmarkIndex = bookmarksListBeforeMoving.IndexOf(bookmark);
 
             var isParent = RecipeBookService.IsBookmarkGroupParent(bookmarkIndex);
-
-            var emptySegmentsForMoving = typeof(Bookmark).GetField("emptySegmentsForMoving", BindingFlags.NonPublic | BindingFlags.Instance)
-                                                         .GetValue(bookmark) as Dictionary<BookmarkRail, List<MinMaxFloat>>;
-            var yDistance = StaticStorage.SubRail.GetMovingToNormalizedPosition(emptySegmentsForMoving[StaticStorage.SubRail], bookmark).y;
             //We need to prevent bookmarks being dragged onto their own subrails and we need to prevent other recipe groups from being dragged onto a subrail at all
-            if (bookmarkIndex != Managers.Potion.recipeBook.currentPageIndex && !isParent && yDistance < StaticStorage.SubRailYCuttof) return true;
+            if (bookmarkIndex != Managers.Potion.recipeBook.currentPageIndex && !isParent) return true;
 
             var mouseWorldPosition = Managers.Input.controlsProvider.CurrentMouseWorldPosition;
             var newRail = instance.bookmarkController.rails.Except(new[] { instance })
                                                            .OrderBy(bRail => (mouseWorldPosition - (Vector2)bRail.transform.position).GetDistanceToLineSegment(bRail.bottomLine.Item1, bRail.bottomLine.Item2))
                                                            .First();
+            var emptySegmentsForMoving = typeof(Bookmark).GetField("emptySegmentsForMoving", BindingFlags.NonPublic | BindingFlags.Instance)
+                                                         .GetValue(bookmark) as Dictionary<BookmarkRail, List<MinMaxFloat>>;
             if (newRail == bookmark.rail || emptySegmentsForMoving[newRail].Count == 0) return false;
             newRail.Connect(bookmark, newRail.GetMovingToNormalizedPosition(emptySegmentsForMoving[newRail], bookmark));
 
