@@ -46,6 +46,21 @@ namespace PotionCraftBookmarkOrganizer.Scripts.Patches
                 Ex.RunSafe(() => MoveBookmarksToAndFromInvisiRail(__instance.curlPageController, backPageIndex));
             }
         }
+
+        /// <summary>
+        /// This patch is only useful if Recipe Waypoints is installed. 
+        /// Normally this method is not used for the recipe book but since it is a really simple way to go to a certain page it was used for Recipe Waypoints.
+        /// </summary>
+        [HarmonyPatch(typeof(Book), "OpenPageAt")]
+        public class Book_OpenPageAt
+        {
+            static void Postfix(Book __instance, int pageIndex)
+            {
+                Ex.RunSafe(() => MoveBookmarksToAndFromInvisiRail(__instance.curlPageController, pageIndex, false));
+                //return true;
+            }
+        }
+
         private static bool CleanupAfterHoveredPageButton(CurlPageController instance, CurlPageCornerController releasedCorner)
         {
             //If the page has been clicked and dragged we but the page was not pulled far enough for a page flip we need to clean up here
