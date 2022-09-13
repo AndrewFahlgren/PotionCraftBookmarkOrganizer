@@ -45,7 +45,7 @@ namespace PotionCraftBookmarkOrganizer.Scripts.Patches
             }
             RecipeBookService.SetupListeners(); //TODO move to a more appropriate spot
 
-            SetupInvisiRail(); //TODO once we start making multiple sub rails here this needs to move to a more appropriate spot where it is called once
+            SetupInvisiRail();
             var containers = SetupBookmarkContainer(parentPage);
             SetupRail(containers.Item1, containers.Item2);
             CreateStaticRailCopyForPage(parentPage);
@@ -89,6 +89,7 @@ namespace PotionCraftBookmarkOrganizer.Scripts.Patches
             //For some reason a y value of 0 is offset slightly from bookmarks which are dragged on manually. The static bookmark should be at the closest possible y value so offset it here.
             var staticBookmarkPosition = new Vector2(nextNormalEmptySpace.x + xPositionOffset, -0.04f);
             StaticStorage.StaticBookmark = subRail.SpawnBookmarkAt(0, staticBookmarkPosition, false);
+            StaticStorage.StaticBookmark.transform.parent = StaticStorage.SubRailActiveBookmarkLayer.transform;
             //var sortGroup = StaticStorage.StaticBookmark.GetComponent<SortingGroup>();
             ////Make the sorting order greater than 0 so it is always shown above other bookmarks
             //sortGroup.sortingOrder = 1;
@@ -137,7 +138,7 @@ namespace PotionCraftBookmarkOrganizer.Scripts.Patches
             subRailPages.transform.parent = pageContainer;
 
 
-            var maskSprite = GenerateSpriteFromImage($"PotionCraftBookmarkOrganizer.InGameImages.Bookmark_organizer_recipe_slot_bottom_left_mask.png", null, true);
+            var maskSprite = SaveLoadService.GenerateSpriteFromImage($"PotionCraftBookmarkOrganizer.InGameImages.Bookmark_organizer_recipe_slot_bottom_left_mask.png", null, true);
             if (maskSprite == null) return (null, null);
 
 
@@ -154,7 +155,7 @@ namespace PotionCraftBookmarkOrganizer.Scripts.Patches
                 pageLayer.AddComponent<PageLayer>();
 
                 var renderer = pageLayer.AddComponent<SpriteRenderer>();
-                var sprite = GenerateSpriteFromImage($"PotionCraftBookmarkOrganizer.InGameImages.Bookmark_organizer_recipe_slot_{i}.png");
+                var sprite = SaveLoadService.GenerateSpriteFromImage($"PotionCraftBookmarkOrganizer.InGameImages.Bookmark_organizer_recipe_slot_{i}.png");
                 if (sprite == null) return (null, null);
                 renderer.sprite = sprite;
                 renderer.sortingLayerID = sortingLayerId;
@@ -191,7 +192,7 @@ namespace PotionCraftBookmarkOrganizer.Scripts.Patches
                 currentSortOrder += 20;
             }
 
-            //StaticStorage.SubRailActiveBookmarkLayer = CreateBookmarkLayer(subRailBookmarkContainer, maskSprite, sortingLayerId, sortingLayerName, currentSortOrder, "ActiveBookmarkLayer").Item1;
+            StaticStorage.SubRailActiveBookmarkLayer = CreateBookmarkLayer(subRailBookmarkContainer, maskSprite, sortingLayerId, sortingLayerName, currentSortOrder, "ActiveBookmarkLayer").Item1;
             StaticStorage.SubRailLayers.Reverse();
 
             //Position the sprite at the bottom left corner of the page
@@ -239,43 +240,6 @@ namespace PotionCraftBookmarkOrganizer.Scripts.Patches
             maskObject.transform.rotation = Quaternion.Euler(0, 0, 270);
             maskObject.transform.localPosition += new Vector3(0, -1.61f, 0.96f);
             return (bookmarkLayer, maskObject);
-        }
-
-        private static Sprite GenerateSpriteFromImage(string path, Vector2? pivot = null, bool createComplexMesh = false)
-        {
-            var stream = Assembly.GetExecutingAssembly().GetManifestResourceStream(path);
-            byte[] data;
-            using (var memoryStream = new MemoryStream())
-            {
-                stream.CopyTo(memoryStream);
-                data = memoryStream.ToArray();
-            }
-            Texture2D texture;
-            if (createComplexMesh)
-            {
-                texture = new Texture2D(0, 0, TextureFormat.ARGB32, false, false)
-                {
-                    filterMode = FilterMode.Bilinear
-                };
-            }
-            else
-            {
-                texture = new Texture2D(0, 0, UnityEngine.Experimental.Rendering.GraphicsFormat.R8G8B8A8_UNorm, UnityEngine.Experimental.Rendering.TextureCreationFlags.None)
-                {
-                    filterMode = FilterMode.Bilinear
-                };
-            }
-            texture.wrapMode = TextureWrapMode.Clamp;
-            texture.wrapModeU = TextureWrapMode.Clamp;
-            texture.wrapModeV = TextureWrapMode.Clamp;
-            texture.wrapModeW = TextureWrapMode.Clamp;
-            if (!texture.LoadImage(data))
-            {
-                Plugin.PluginLogger.LogError($"ERROR: Failed to load Bookmark_organizer_recipe_slot.png.");
-                return null;
-            }
-            var actualPivot = pivot.HasValue ? pivot.Value : new Vector2(0.5f, 0.5f);
-            return Sprite.Create(texture, new Rect(0, 0, texture.width, texture.height), actualPivot, 100, 1, createComplexMesh ? SpriteMeshType.Tight : SpriteMeshType.FullRect);
         }
 
         private static void ShrinkDescriptionBox(RecipeBookLeftPageContent parentPage)

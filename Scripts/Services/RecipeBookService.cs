@@ -59,7 +59,6 @@ namespace PotionCraftBookmarkOrganizer.Scripts.Services
             {
                 var indexOffset = i * (moveForward ? 1 : -1);
                 var actualIndex = (currentPageIndex + indexOffset + pagesCount) % pagesCount;
-                Plugin.PluginLogger.LogInfo($"GetNextNonSubRecipeIndex - actualIndex: {actualIndex} - currentPageIndex: {currentPageIndex}");
                 GetBookmarkStorageRecipeIndex(actualIndex, out bool indexIsparent);
                 if (!indexIsparent)
                 {
@@ -67,8 +66,24 @@ namespace PotionCraftBookmarkOrganizer.Scripts.Services
                     break;
                 }
             }
-            Plugin.PluginLogger.LogInfo($"GetNextNonSubRecipeIndex - nextIndex: {nextIndex} - currentPageIndex: {currentPageIndex}");
             return nextIndex;
+        }
+
+        public static void PromoteIndexToParent(int subBookmarkIndex)
+        {
+            var groupIndex = GetBookmarkStorageRecipeIndex(subBookmarkIndex, out bool indexIsParent);
+            if (!indexIsParent) return;
+            var recipeList = Managers.Potion.recipeBook.savedRecipes;
+            var subRecipe = recipeList[subBookmarkIndex];
+            var groupRecipe = recipeList[groupIndex];
+            recipeList.RemoveAt(groupIndex);
+            recipeList.Insert(groupIndex, subRecipe);
+            recipeList.RemoveAt(subBookmarkIndex);
+            recipeList.Insert(subBookmarkIndex, groupRecipe);
+            Managers.Potion.recipeBook.UpdateBookmarkIcon(groupIndex);
+            Managers.Potion.recipeBook.UpdateBookmarkIcon(subBookmarkIndex);
+            SubRailService.UpdateStaticBookmark();
+            UpdateBookmarkGroupsForCurrentRecipe();
         }
 
         private static bool currentlyRearranging;
@@ -87,7 +102,6 @@ namespace PotionCraftBookmarkOrganizer.Scripts.Services
             BookmarksRearranged();
         }
 
-        //TODO for some reason this is rearranging wrong. Lets put in debug statemtns here. Is this a result of the save changes or something that has been wrong for a long time?
         private static async void BookmarksRearranged()
         {
             Plugin.PluginLogger.LogInfo("BookmarksRearranged");
@@ -153,6 +167,8 @@ namespace PotionCraftBookmarkOrganizer.Scripts.Services
             });
             StaticStorage.BookmarkGroups[recipeIndexForCurrentGroupUpdate] = bookmarks.ToList();
             currentlyRearranging = false;
+            var groupBookmark = Managers.Potion.recipeBook.bookmarkControllersGroupController.GetBookmarkByIndex(recipeIndexForCurrentGroupUpdate);
+            ShowHideGroupBookmarkIcon(groupBookmark, bookmarks.Any());
         }
 
         public static int GetBookmarkStorageRecipeIndexForSelectedRecipe()
@@ -197,6 +213,17 @@ namespace PotionCraftBookmarkOrganizer.Scripts.Services
                                                             ? recipeBook.currentPageIndex.Distance(nextIndex) <= nextIndex.Distance(recipeBook.currentPageIndex + pagesCount)
                                                             : recipeBook.currentPageIndex.Distance(nextIndex) >= recipeBook.currentPageIndex.Distance(nextIndex + pagesCount)
                                                         , nextPageIndex: nextIndex);
+        }
+
+        public static void ShowHideGroupBookmarkIcon(Bookmark bookmark, bool show)
+        {
+            var cornerGameObject = bookmark.transform.Find(StaticStorage.CornerIconGameObjectName)?.gameObject;
+            if (cornerGameObject == null)
+            {
+                Plugin.PluginLogger.LogError("ERROR: Bookmark does not have a group corner icon setup!");
+                return;
+            }
+            cornerGameObject.gameObject.SetActive(show);
         }
     }
 }

@@ -16,6 +16,8 @@
     <None Remove="InGameImages\Bookmark_organizer_recipe_slot_2.png" />
     <None Remove="InGameImages\Bookmark_organizer_recipe_slot_3.png" />
     <None Remove="InGameImages\Bookmark_organizer_recipe_slot_bottom_left_mask.png" />
+    <None Remove="InGameImages\Group_bookmark_icon.png" />
+    <None Remove="InGameImages\Group_bookmark_icon_mask.png" />
   </ItemGroup>
 
   <ItemGroup>
@@ -24,6 +26,8 @@
     <EmbeddedResource Include="InGameImages\Bookmark_organizer_recipe_slot_1.png" />
     <EmbeddedResource Include="InGameImages\Bookmark_organizer_recipe_slot_0.png" />
 	<EmbeddedResource Include="InGameImages\Bookmark_organizer_recipe_slot_bottom_left_mask.png" />
+	<EmbeddedResource Include="InGameImages\Group_bookmark_icon.png" />
+	<EmbeddedResource Include="InGameImages\Group_bookmark_icon_mask.png" />
   </ItemGroup>
 
   <ItemGroup>

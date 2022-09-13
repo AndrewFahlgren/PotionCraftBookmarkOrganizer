@@ -32,6 +32,7 @@ namespace PotionCraftBookmarkOrganizer.Scripts.Patches
         private static void HideStaticRailsAndShowRealRailAfterFlipAnimation(CurlPageController instance)
         {
             SubRailService.ShowSubRailAfterFlip();
+            SubRailService.UpdateNonSubBookmarksActiveState();
         }
     }
 }

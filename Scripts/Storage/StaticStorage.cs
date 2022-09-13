@@ -14,7 +14,10 @@ namespace PotionCraftBookmarkOrganizer.Scripts.Storage
         public const string SubRailName = "BottomToTopSubRail";
         public const string InvisiRailName = "BottomToTopInvisiRail";
 
+        public const string CornerIconGameObjectName = "GroupCornerIcon";
+
         public static Dictionary<int, List<BookmarkStorage>> BookmarkGroups = new();
+        public static List<int> SavedRecipePositions;
 
         public static BookmarkRail SubRail;
         public static GameObject SubRailPages;
@@ -35,5 +38,11 @@ namespace PotionCraftBookmarkOrganizer.Scripts.Storage
         public static CommandInvokeRepeater HotkeyDown;
 
         public static string StateJsonString;
+
+        public class SavedStaticStorage
+        {
+            public Dictionary<int, List<BookmarkStorage>> BookmarkGroups { get; set; }
+            public List<int> SavedRecipePositions { get; set; }
+        }
     }
 }

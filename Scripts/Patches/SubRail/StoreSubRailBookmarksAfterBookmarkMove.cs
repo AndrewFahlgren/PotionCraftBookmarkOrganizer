@@ -21,18 +21,17 @@ namespace PotionCraftBookmarkOrganizer.Scripts.Patches
         [HarmonyPatch(typeof(Bookmark), "UpdateMovingState")]
         public class Bookmark_UpdateMovingState
         {
-            static void Postfix(Bookmark __instance, Bookmark.MovingState value)
+            static void Postfix(Bookmark.MovingState value)
             {
-                Ex.RunSafe(() => UpdateLayerForActiveSubRailBookmark(__instance, value));
+                Ex.RunSafe(() => UpdateLayerForActiveSubRailBookmark(value));
             }
         }
 
-        private static void UpdateLayerForActiveSubRailBookmark(Bookmark instance, Bookmark.MovingState value)
+        private static void UpdateLayerForActiveSubRailBookmark(Bookmark.MovingState value)
         {
-            //if (value == instance.CurrentMovingState) return;
             if (value != Bookmark.MovingState.Idle) return;
-            Plugin.PluginLogger.LogInfo("UpdateLayerForActiveSubRailBookmark");
             RecipeBookService.UpdateBookmarkGroupsForCurrentRecipe();
+            SubRailService.UpdateSubRailForSelectedIndex(Managers.Potion.recipeBook.currentPageIndex);
             return;
         }
     }

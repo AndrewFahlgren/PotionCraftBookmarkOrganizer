@@ -5,7 +5,9 @@ using PotionCraftBookmarkOrganizer.Scripts.Storage;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using System.Text;
+using UnityEngine;
 
 namespace PotionCraftBookmarkOrganizer.Scripts.Services
 {
@@ -26,7 +28,12 @@ namespace PotionCraftBookmarkOrganizer.Scripts.Services
                 if (!StaticStorage.BookmarkGroups.Any()) return;
                 //Serialize recipe groups to json
 
-                var serializedGroups = JsonConvert.SerializeObject(StaticStorage.BookmarkGroups);
+                var toSerialize = new StaticStorage.SavedStaticStorage
+                {
+                    BookmarkGroups = StaticStorage.BookmarkGroups,
+                    SavedRecipePositions = StaticStorage.SavedRecipePositions
+                };
+                var serializedGroups = JsonConvert.SerializeObject(toSerialize, new JsonSerializerSettings { ReferenceLoopHandling = ReferenceLoopHandling.Ignore });
 
                 var serialized = $",\"{StaticStorage.BookmarkGroupsJsonSaveName}\":{serializedGroups}";
                 //Insert custom field at the end of the save file at the top level
@@ -62,17 +69,15 @@ namespace PotionCraftBookmarkOrganizer.Scripts.Services
             }
 
             //Deserialize the bookmark groups from json using our dummy class
-            var deserialized = JsonConvert.DeserializeObject<BookmarkGroupsDeserialized>(stateJsonString);
-            if (deserialized.BookmarkGroups == null)
+            var deserialized = JsonConvert.DeserializeObject<BookmarkGroupsDeserialized>(stateJsonString, new JsonSerializerSettings { ReferenceLoopHandling = ReferenceLoopHandling.Ignore });
+            if (deserialized.SavedStaticStorage?.BookmarkGroups == null)
             {
                 Plugin.PluginLogger.LogError("Error: An error occured during bookmark group deserialization");
                 return true;
             }
 
-            StaticStorage.BookmarkGroups = deserialized.BookmarkGroups;
-
-            Plugin.PluginLogger.LogInfo($"RetreiveStoredBookmarkGroups - {deserialized.BookmarkGroups.Count}");
-
+            StaticStorage.BookmarkGroups = deserialized.SavedStaticStorage.BookmarkGroups;
+            StaticStorage.SavedRecipePositions = deserialized.SavedStaticStorage.SavedRecipePositions;
 
             return true;
         }
@@ -92,15 +97,52 @@ namespace PotionCraftBookmarkOrganizer.Scripts.Services
         /// </summary>
         public static bool ClearFileSpecificDataOnFileLoad()
         {
-            Plugin.PluginLogger.LogInfo("ClearFileSpecificDataOnFileLoad");
             StaticStorage.BookmarkGroups.Clear();
+            StaticStorage.SavedRecipePositions = null;
             return true;
         }
 
         private class BookmarkGroupsDeserialized
         {
             [JsonProperty(StaticStorage.BookmarkGroupsJsonSaveName)]
-            public Dictionary<int, List<BookmarkStorage>> BookmarkGroups { get; set; }
+            public StaticStorage.SavedStaticStorage SavedStaticStorage { get; set; }
+        }
+
+        public static Sprite GenerateSpriteFromImage(string path, Vector2? pivot = null, bool createComplexMesh = false)
+        {
+            var stream = Assembly.GetExecutingAssembly().GetManifestResourceStream(path);
+            byte[] data;
+            using (var memoryStream = new System.IO.MemoryStream())
+            {
+                stream.CopyTo(memoryStream);
+                data = memoryStream.ToArray();
+            }
+            Texture2D texture;
+            if (createComplexMesh)
+            {
+                texture = new Texture2D(0, 0, TextureFormat.ARGB32, false, false)
+                {
+                    filterMode = FilterMode.Bilinear
+                };
+            }
+            else
+            {
+                texture = new Texture2D(0, 0, UnityEngine.Experimental.Rendering.GraphicsFormat.R8G8B8A8_UNorm, UnityEngine.Experimental.Rendering.TextureCreationFlags.None)
+                {
+                    filterMode = FilterMode.Bilinear
+                };
+            }
+            texture.wrapMode = TextureWrapMode.Clamp;
+            texture.wrapModeU = TextureWrapMode.Clamp;
+            texture.wrapModeV = TextureWrapMode.Clamp;
+            texture.wrapModeW = TextureWrapMode.Clamp;
+            if (!texture.LoadImage(data))
+            {
+                Plugin.PluginLogger.LogError($"ERROR: Failed to load Bookmark_organizer_recipe_slot.png.");
+                return null;
+            }
+            var actualPivot = pivot.HasValue ? pivot.Value : new Vector2(0.5f, 0.5f);
+            return Sprite.Create(texture, new Rect(0, 0, texture.width, texture.height), actualPivot, 100, 1, createComplexMesh ? SpriteMeshType.Tight : SpriteMeshType.FullRect);
         }
     }
 }

@@ -23,7 +23,7 @@ namespace PotionCraftBookmarkOrganizer.Scripts.Patches
     public class OpenParentRecipeOnInactiveStaticBookmarkClickPatch
     {
         [HarmonyPatch(typeof(InactiveBookmarkButton), "OnReleasePrimary")]
-        public class InactiveBookmarkButton_OnGrabPrimary
+        public class InactiveBookmarkButton_OnReleasePrimary
         {
             static bool Prefix(InactiveBookmarkButton __instance)
             {

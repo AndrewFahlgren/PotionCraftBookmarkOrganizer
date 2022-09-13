@@ -10,6 +10,7 @@ using System.Linq;
 using System.Reflection;
 using System.Text;
 using UnityEngine;
+using static PotionCraft.ObjectBased.UIElements.Bookmarks.BookmarkController;
 
 namespace PotionCraftBookmarkOrganizer.Scripts.Services
 {
@@ -35,6 +36,47 @@ namespace PotionCraftBookmarkOrganizer.Scripts.Services
         {
             if (rail == null) return false;
             return rail.gameObject.name == StaticStorage.InvisiRailName;
+        }
+
+        public static void UpdateSubRailForSelectedIndex(int pageIndex)
+        {
+            //Before we mess with indexes update the static bookmark to match this recipe
+            UpdateStaticBookmark(pageIndex);
+            var groupIndex = RecipeBookService.GetBookmarkStorageRecipeIndex(pageIndex);
+            var allBookmarks = Managers.Potion.recipeBook.bookmarkControllersGroupController.GetAllBookmarksList();
+            var saved = GetSubRailRecipesForIndex(groupIndex).Select(s => new { savedBookmark = s, bookmark = allBookmarks[s.recipeIndex], isActive = pageIndex == s.recipeIndex }).ToList();
+            //Check to see if we actually need to switch bookmarks on page turn or if we are in the same recipe group
+            if (saved.Any(sb => StaticStorage.SubRail.railBookmarks.Any(rb => sb.bookmark == rb)))
+            {
+                saved.ForEach(savedBookmark =>
+                {
+                    savedBookmark.bookmark.CurrentVisualState = savedBookmark.isActive ? Bookmark.VisualState.Active : Bookmark.VisualState.Inactive;
+                });
+                return;
+            }
+
+            var bookmarksToRemove = StaticStorage.SubRail.railBookmarks.ToList();
+            StaticStorage.RemovingSubRailBookMarksForPageTurn = true;
+            bookmarksToRemove.ForEach(b =>
+            {
+                var nextAvailSpace = GetNextEmptySpaceOnRail(StaticStorage.InvisiRail);
+                if (nextAvailSpace == null)
+                {
+                    throw new Exception("PotionCraftBookmarkOrganizer - Somehow the InvisiRail ran out of space. All hope is lost!");
+                }
+                ConnectBookmarkToRail(StaticStorage.InvisiRail, b, nextAvailSpace.Value);
+            });
+            StaticStorage.RemovingSubRailBookMarksForPageTurn = false;
+
+            StaticStorage.AddingSubRailBookMarksForPageTurn = true;
+
+            saved.ForEach(savedBookmark =>
+            {
+                ConnectBookmarkToRail(StaticStorage.SubRail, savedBookmark.bookmark, savedBookmark.savedBookmark.SerializedBookmark.position);
+                savedBookmark.bookmark.CurrentVisualState = savedBookmark.isActive ? Bookmark.VisualState.Active : Bookmark.VisualState.Inactive;
+            });
+
+            StaticStorage.AddingSubRailBookMarksForPageTurn = false;
         }
 
         public static List<BookmarkStorage> GetSubRailRecipesForIndex(int nextPageIndex)
@@ -66,17 +108,9 @@ namespace PotionCraftBookmarkOrganizer.Scripts.Services
                 return;
             }
             StaticStorage.StaticBookmark.gameObject.SetActive(true);
-            var activeBookmarkIconContourColor = typeof(RecipeBook).GetField("activeBookmarkIconContourColor", BindingFlags.NonPublic | BindingFlags.Instance)
-                                                                   .GetValue(recipeBook) as ColorObject;
-            var inactiveBookmarkIconContourColor = typeof(RecipeBook).GetField("inactiveBookmarkIconContourColor", BindingFlags.NonPublic | BindingFlags.Instance)
-                                                                     .GetValue(recipeBook) as ColorObject;
-            var bookmarkIcon1 = savedRecipe.coloredIcon.GetSprite(activeBookmarkIconContourColor, true);
-            var bookmarkIcon2 = savedRecipe.coloredIcon.GetSprite(inactiveBookmarkIconContourColor, true);
-            StaticStorage.StaticBookmark.SetBookmarkContent(bookmarkIcon1, bookmarkIcon2, null);
+            var sourceBookmark = recipeBook.bookmarkControllersGroupController.GetBookmarkByIndex(index);
+            StaticStorage.StaticBookmark.SetBookmarkContent(sourceBookmark.activeBookmarkButton.normalSpriteIcon, sourceBookmark.inactiveBookmarkButton.normalSpriteIcon, null);
             StaticStorage.StaticBookmark.CurrentVisualState = isparentIndex ? Bookmark.VisualState.Inactive : Bookmark.VisualState.Active;
-            //TODO what does mirroring actuall do? It is flipping bookmark icons upside down with this code. Do we need this at all?
-            //var isOriginalMirrored = recipeBook.bookmarkControllersGroupController.GetBookmarkByIndex(index).isMirrored;
-            //if (StaticStorage.StaticBookmark.isMirrored != isOriginalMirrored) StaticStorage.StaticBookmark.SetMirrored(true);
         }
 
         public static int GetPagesCountWithoutSpecialRails()
@@ -102,6 +136,37 @@ namespace PotionCraftBookmarkOrganizer.Scripts.Services
                 r.Item1.SetActive(false);
                 r.Item2.SetActive(false);
             });
+        }
+
+        public static void UpdateNonSubBookmarksActiveState()
+        {
+            var selectedParentIndex = RecipeBookService.GetBookmarkStorageRecipeIndexForSelectedRecipe();
+            var rails = Managers.Potion.recipeBook.bookmarkControllersGroupController.controllers.First().bookmarkController.rails.Except(new[] { StaticStorage.SubRail, StaticStorage.InvisiRail });                                     
+            var bookmarks = rails.SelectMany(r => r.railBookmarks).ToList();
+            for (var i = 0; i < bookmarks.Count; i++)
+            {
+                bookmarks[i].CurrentVisualState = i == selectedParentIndex 
+                                                    ? Bookmark.VisualState.Active 
+                                                    : Bookmark.VisualState.Inactive;
+            }
+        }
+
+        public static Tuple<BookmarkRail, Vector2> GetSpawnPosition(BookmarkController bookmarkController, SpaceType spaceType)
+        {
+            var nonSpecialRails = bookmarkController.rails.Except(new[] { StaticStorage.SubRail, StaticStorage.InvisiRail }).ToList();
+            foreach (var rail in nonSpecialRails)
+            {
+                var emptySegments = rail.GetEmptySegments(spaceType);
+                if (emptySegments.Any())
+                {
+                    var x = rail.inverseSpawnOrder ? emptySegments.Last().max : emptySegments.First().min;
+                    var spawnHeight = typeof(BookmarkController).GetField("spawnHeight", BindingFlags.NonPublic | BindingFlags.Instance)
+                                                                .GetValue(bookmarkController) as MinMaxFloat;
+                    var y = spawnHeight.GetRandom();
+                    return new Tuple<BookmarkRail, Vector2>(rail, new Vector2(x, y));
+                }
+            }
+            return null;
         }
     }
 }

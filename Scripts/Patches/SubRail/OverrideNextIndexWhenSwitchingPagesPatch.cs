@@ -137,8 +137,6 @@ namespace PotionCraftBookmarkOrganizer.Scripts.Patches
             {
                 nextBookmark = currentBookmarkGroup.OrderBy(b => b.recipeIndex).FirstOrDefault();
             }
-            var currentTitle = Managers.Potion.recipeBook.savedRecipes[currentBookIndex].GetLocalizedTitle();
-            var nextTitle = nextBookmark == null ? "null" : Managers.Potion.recipeBook.savedRecipes[nextBookmark.recipeIndex].GetLocalizedTitle();
             return nextBookmark;
         }
 

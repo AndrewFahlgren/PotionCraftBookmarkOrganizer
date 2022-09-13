@@ -54,9 +54,9 @@ namespace PotionCraftBookmarkOrganizer.Scripts.Patches
         [HarmonyPatch(typeof(Book), "OpenPageAt")]
         public class Book_OpenPageAt
         {
-            static void Postfix(Book __instance, int pageIndex)
+            static void Postfix(int pageIndex)
             {
-                Ex.RunSafe(() => MoveBookmarksToAndFromInvisiRail(__instance.curlPageController, pageIndex, false));
+                Ex.RunSafe(() => SubRailService.UpdateSubRailForSelectedIndex(pageIndex));
             }
         }
 
@@ -79,12 +79,11 @@ namespace PotionCraftBookmarkOrganizer.Scripts.Patches
 
         private static void CleanupAfterHoveredPageButton()
         {
-            Plugin.PluginLogger.LogInfo("CleanupAfterHoveredPageButton");
             //Hide the static rails and show the real sub rail
             SubRailService.ShowSubRailAfterFlip();
             var recipeBook = Managers.Potion.recipeBook;
             //Fix the subrail for a cancelled page turn with the current index
-            MoveBookmarksToAndFromInvisiRail(recipeBook.curlPageController, recipeBook.currentPageIndex, false);
+            SubRailService.UpdateSubRailForSelectedIndex(recipeBook.currentPageIndex);
         }
 
         private static void MoveBookmarksToAndFromInvisiRail(CurlPageController instance, int nextPageIndex, bool showStaticRails = true)
@@ -97,44 +96,7 @@ namespace PotionCraftBookmarkOrganizer.Scripts.Patches
                 var page = instance.frontLeftPage.pageContent as RecipeBookLeftPageContent;
                 CopyBookmarksToStaticRailAndShow(page);
             }
-            //Before we mess with indexes update the static bookmark to match this recipe
-            SubRailService.UpdateStaticBookmark(nextPageIndex);
-            var index = RecipeBookService.GetBookmarkStorageRecipeIndex(nextPageIndex);
-            var allBookmarks = Managers.Potion.recipeBook.bookmarkControllersGroupController.GetAllBookmarksList();
-            var saved = SubRailService.GetSubRailRecipesForIndex(index).Select(s => new { savedBookmark = s, bookmark = allBookmarks[s.recipeIndex], isActive = nextPageIndex == s.recipeIndex}).ToList();
-            //Check to see if we actually need to switch bookmarks on page turn or if we are in the same recipe group
-            if (saved.Any(sb => StaticStorage.SubRail.railBookmarks.Any(rb => sb.bookmark == rb)))
-            {
-                saved.ForEach(savedBookmark =>
-                {
-                    savedBookmark.bookmark.CurrentVisualState = savedBookmark.isActive ? Bookmark.VisualState.Active : Bookmark.VisualState.Inactive;
-                });
-                //Copy bookmarks to static subrail
-                if (showStaticRails) UpdateBackPageForFlipAndShow(instance);
-                return;
-            }
-
-            var bookmarksToRemove = StaticStorage.SubRail.railBookmarks.ToList();
-            StaticStorage.RemovingSubRailBookMarksForPageTurn = true;
-            bookmarksToRemove.ForEach(b =>
-            {
-                var nextAvailSpace = GetNextInvisiRailSpace();
-                if (nextAvailSpace == null)
-                {
-                    throw new Exception("PotionCraftBookmarkOrganizer - Somehow the InvisiRail ran out of space. All hope is lost!");
-                }
-                SubRailService.ConnectBookmarkToRail(StaticStorage.InvisiRail, b, nextAvailSpace.Value);
-            });
-            StaticStorage.RemovingSubRailBookMarksForPageTurn = false;
-
-            StaticStorage.AddingSubRailBookMarksForPageTurn = true;
-
-            saved.ForEach(savedBookmark =>
-            {
-                SubRailService.ConnectBookmarkToRail(StaticStorage.SubRail, savedBookmark.bookmark, savedBookmark.savedBookmark.SerializedBookmark.position);
-                savedBookmark.bookmark.CurrentVisualState = savedBookmark.isActive ? Bookmark.VisualState.Active : Bookmark.VisualState.Inactive;
-            });
-            StaticStorage.AddingSubRailBookMarksForPageTurn = false;
+            SubRailService.UpdateSubRailForSelectedIndex(nextPageIndex);
 
             //Copy bookmarks to static subrail
             if (showStaticRails) UpdateBackPageForFlipAndShow(instance);
@@ -161,11 +123,6 @@ namespace PotionCraftBookmarkOrganizer.Scripts.Patches
 
             containers.Item1.SetActive(true);
             containers.Item2.SetActive(true);
-        }
-
-        private static Vector2? GetNextInvisiRailSpace()
-        {
-            return SubRailService.GetNextEmptySpaceOnRail(StaticStorage.InvisiRail);
         }
     }
 }

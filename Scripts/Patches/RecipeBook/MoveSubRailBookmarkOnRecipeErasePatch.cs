@@ -40,10 +40,10 @@ namespace PotionCraftBookmarkOrganizer.Scripts.Patches
             if (!indexIsParent && !isParentRecipe) return true;
 
             var controller = instance.bookmarkControllersGroupController.controllers.First().bookmarkController;
-            var spawnPosition = GetSpawnPosition(controller, BookmarkController.SpaceType.Large)
-                                ?? GetSpawnPosition(controller, BookmarkController.SpaceType.Medium)
-                                ?? GetSpawnPosition(controller, BookmarkController.SpaceType.Small)
-                                ?? GetSpawnPosition(controller, BookmarkController.SpaceType.Min);
+            var spawnPosition = SubRailService.GetSpawnPosition(controller, BookmarkController.SpaceType.Large)
+                                ?? SubRailService.GetSpawnPosition(controller, BookmarkController.SpaceType.Medium)
+                                ?? SubRailService.GetSpawnPosition(controller, BookmarkController.SpaceType.Small)
+                                ?? SubRailService.GetSpawnPosition(controller, BookmarkController.SpaceType.Min);
             if (spawnPosition == null)
             {
                 Plugin.PluginLogger.LogInfo("There is no empty space for bookmark! Change settings!");
@@ -116,24 +116,6 @@ namespace PotionCraftBookmarkOrganizer.Scripts.Patches
             }
             if (!flag) nextIndex = (currentPageIndex >= pagesCount - 1) ? index - 1 : index + 1;
             return nextIndex;
-        }
-
-        private static Tuple<BookmarkRail, Vector2> GetSpawnPosition(BookmarkController bookmarkController, BookmarkController.SpaceType spaceType)
-        {
-            var nonSpecialRails = bookmarkController.rails.Except(new[] { StaticStorage.SubRail, StaticStorage.InvisiRail }).ToList();
-            foreach (var rail in nonSpecialRails)
-            {
-                var emptySegments = rail.GetEmptySegments(spaceType);
-                if (emptySegments.Any())
-                {
-                    var x = rail.inverseSpawnOrder ? emptySegments.Last().max : emptySegments.First().min;
-                    var spawnHeight = typeof(BookmarkController).GetField("spawnHeight", BindingFlags.NonPublic | BindingFlags.Instance)
-                                                                .GetValue(bookmarkController) as MinMaxFloat;
-                    var y = spawnHeight.GetRandom();
-                    return new Tuple<BookmarkRail, Vector2>(rail, new Vector2(x, y));
-                }
-            }
-            return null;
         }
     }
 }

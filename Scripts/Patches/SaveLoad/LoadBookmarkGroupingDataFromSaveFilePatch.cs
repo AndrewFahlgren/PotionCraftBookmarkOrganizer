@@ -12,7 +12,7 @@ using System.Linq;
 
 namespace PotionCraftBookmarkOrganizer.Scripts.Patches
 {
-    public class RetrieveBookmarkGroupingDataFromSavedStatePatch
+    public class LoadBookmarkGroupingDataFromSaveFilePatch
     { 
         [HarmonyPatch(typeof(SaveLoadManager), "LoadSelectedState")]
         public class SaveLoadManager_LoadSelectedState
