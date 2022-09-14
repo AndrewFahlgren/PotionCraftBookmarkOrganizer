@@ -1,9 +1,15 @@
 # Bookmark Organizer
 
-A mod to allow you to organize bookmarks into groups.
+A mod that lets you to organize bookmarks into groups!
+
+Drag bookmarks into the page cutout to create a bookmark group:
+![image](https://github.com/AndrewFahlgren/PotionCraftBookmarkOrganizer/blob/master/Images/Bookmark_Organizer_MainImage.PNG?raw=true)
+
+Easily switch between bookmarks within the group:
+![image](https://github.com/AndrewFahlgren/PotionCraftBookmarkOrganizer/blob/master/Images/Bookmark_Organizer_SecondImage.PNG?raw=true)
 
 ## Showcase Video
-
+See this [showcase video](https://youtu.be/n5G4lWEsdjg) to see everything this mod does
 
 ## Installation
 
