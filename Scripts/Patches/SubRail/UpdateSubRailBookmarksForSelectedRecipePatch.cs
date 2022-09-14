@@ -20,6 +20,18 @@ namespace PotionCraftBookmarkOrganizer.Scripts.Patches
 {
     public class UpdateSubRailBookmarksForSelectedRecipePatch
     {
+        /// <summary>
+        /// This is only used when adding recipes or deleting recipes
+        /// </summary>
+        [HarmonyPatch(typeof(Book), "UpdateCurrentPageIndex")]
+        public class Book_UpdateCurrentPageIndex
+        {
+            static void Postfix(Book __instance, int index)
+            {
+                Ex.RunSafe(() => UpdateCurrentPageIndex(__instance, index));
+            }
+        }
+
         [HarmonyPatch(typeof(CurlPageController), "OnCornerReleased")]
         public class CurlPageController_OnCornerReleased
         {
@@ -54,10 +66,16 @@ namespace PotionCraftBookmarkOrganizer.Scripts.Patches
         [HarmonyPatch(typeof(Book), "OpenPageAt")]
         public class Book_OpenPageAt
         {
-            static void Postfix(int pageIndex)
+            static void Postfix(Book __instance, int pageIndex)
             {
-                Ex.RunSafe(() => SubRailService.UpdateSubRailForSelectedIndex(pageIndex));
+                Ex.RunSafe(() => UpdateCurrentPageIndex(__instance, pageIndex));
             }
+        }
+
+        private static void UpdateCurrentPageIndex(Book instance, int index)
+        {
+            if (instance is not RecipeBook) return;
+            SubRailService.UpdateSubRailForSelectedIndex(index);
         }
 
         private static bool CleanupAfterHoveredPageButton(CurlPageController instance, CurlPageCornerController releasedCorner)

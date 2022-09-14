@@ -35,59 +35,24 @@ namespace PotionCraftBookmarkOrganizer.Scripts.Patches
         private static bool MoveSubRailBookmarkOnRecipeErase(RecipeBook instance, Potion potion)
         {
             var index = instance.savedRecipes.IndexOf(potion);
-            RecipeBookService.GetBookmarkStorageRecipeIndex(index, out bool indexIsParent);
+            var groupIndex = RecipeBookService.GetBookmarkStorageRecipeIndex(index, out bool indexIsParent);
             var isParentRecipe = RecipeBookService.IsBookmarkGroupParent(index);
             if (!indexIsParent && !isParentRecipe) return true;
 
             var controller = instance.bookmarkControllersGroupController.controllers.First().bookmarkController;
-            var spawnPosition = SubRailService.GetSpawnPosition(controller, BookmarkController.SpaceType.Large)
-                                ?? SubRailService.GetSpawnPosition(controller, BookmarkController.SpaceType.Medium)
-                                ?? SubRailService.GetSpawnPosition(controller, BookmarkController.SpaceType.Small)
-                                ?? SubRailService.GetSpawnPosition(controller, BookmarkController.SpaceType.Min);
-            if (spawnPosition == null)
-            {
-                Plugin.PluginLogger.LogInfo("There is no empty space for bookmark! Change settings!");
-                return false;
-            }
 
 
             //If this is a parent recipe we need to promote a new bookmark to be parent. Do this before connecting to avoid indexing nightmares.
-            Bookmark newParentBookmark = null;
             if (isParentRecipe)
             {
                 var oldGroup = StaticStorage.BookmarkGroups[index];
-                var newParent = oldGroup.OrderByDescending(b => b.SerializedBookmark.position.x).First();
-                oldGroup.Remove(newParent);
-                StaticStorage.BookmarkGroups.Remove(index);
-                StaticStorage.BookmarkGroups[newParent.recipeIndex] = oldGroup;
-                newParentBookmark = instance.bookmarkControllersGroupController.GetBookmarkByIndex(newParent.recipeIndex);
+                var newParent = oldGroup.OrderByDescending(b => b.SerializedBookmark.position.x).FirstOrDefault();
+                RecipeBookService.PromoteIndexToParent(newParent.recipeIndex);
+                index = newParent.recipeIndex;
             }
 
-
-            var bookmark = instance.bookmarkControllersGroupController.GetBookmarkByIndex(index);
-            SubRailService.ConnectBookmarkToRail(spawnPosition.Item1, bookmark, spawnPosition.Item2);
-
-            var pagesCount = instance.GetPagesCount();
-            int nextIndex = -1;
-            if (isParentRecipe)
-            {
-                nextIndex = instance.bookmarkControllersGroupController.GetAllBookmarksList().IndexOf(newParentBookmark);
-            }
-            else
-            {
-                nextIndex = RecipeBookService.GetBookmarkStorageRecipeIndex(index, out bool _);
-                if (nextIndex == index)
-                {
-                    nextIndex = GetNextNonEmptyIndex(instance, index, pagesCount, nextIndex);
-                }
-            }
-
-            //Flip the page to the proper recipe book page
-            RecipeBookService.FlipPageToIndex(nextIndex);
-
-            //Actually erase the recipe
-            index = instance.bookmarkControllersGroupController.GetAllBookmarksList().IndexOf(bookmark);
             instance.savedRecipes[index] = null;
+            //This shouldn't happen but lets make sure
             if (instance.currentPotionRecipeIndex == index)
             {
                 instance.currentPotionRecipeIndex = -1;
@@ -95,6 +60,29 @@ namespace PotionCraftBookmarkOrganizer.Scripts.Patches
             instance.UpdateBookmarkIcon(index);
             Managers.Potion.potionCraftPanel.UpdateSaveRecipeButton(true);
             Managers.Ingredient.alchemyMachine.finishLegendarySubstanceWindow.UpdateSaveProductRecipeButton();
+
+            //Before messing with indexes erase the recipe from our bookmark groups dictionary
+            StaticStorage.BookmarkGroups[groupIndex] = StaticStorage.BookmarkGroups[groupIndex].Where(b => b.recipeIndex != index).ToList();
+            var groupBookmark = Managers.Potion.recipeBook.bookmarkControllersGroupController.GetBookmarkByIndex(groupIndex);
+            RecipeBookService.ShowHideGroupBookmarkIcon(groupBookmark, StaticStorage.BookmarkGroups[groupIndex].Any());
+
+            //Before messing with indexes select naviage to the correct page (this shouldn't move any bookmarks because we are staying in the same group)
+            Managers.Potion.recipeBook.UpdateCurrentPageIndex(groupIndex);
+            SubRailService.UpdateNonSubBookmarksActiveState();
+
+            //Move the now empty bookmark out of the sub group
+            var spawnPosition = SubRailService.GetSpawnPosition(controller, BookmarkController.SpaceType.Large)
+                                ?? SubRailService.GetSpawnPosition(controller, BookmarkController.SpaceType.Medium)
+                                ?? SubRailService.GetSpawnPosition(controller, BookmarkController.SpaceType.Small)
+                                ?? SubRailService.GetSpawnPosition(controller, BookmarkController.SpaceType.Min);
+            if (spawnPosition == null)
+            {
+                Plugin.PluginLogger.LogError("There is no empty space for bookmark! Change settings!");
+                return false;
+            }
+            var bookmark = instance.bookmarkControllersGroupController.GetBookmarkByIndex(index);
+            SubRailService.ConnectBookmarkToRail(spawnPosition.Item1, bookmark, spawnPosition.Item2);
+
 
             return false;
         }

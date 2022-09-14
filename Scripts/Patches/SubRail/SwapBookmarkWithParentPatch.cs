@@ -20,7 +20,7 @@ namespace PotionCraftBookmarkOrganizer.Scripts.Patches
 {
     public class SwapBookmarkWithParentPatch
     {
-        private const float SwapAboveY = 1.8f;
+        private const float SwapAboveY = 1.2f;
         private const float DontSwapBelowX = -0.6f;
         private const float SwapPreviewAlpha = 0.5f;
 
@@ -80,7 +80,9 @@ namespace PotionCraftBookmarkOrganizer.Scripts.Patches
             //Empty bookmarks should never be able to swap with the static bookmark
             if (instance.activeBookmarkButton.normalSpriteIcon == null) return;
             var index = Managers.Potion.recipeBook.bookmarkControllersGroupController.GetAllBookmarksList().IndexOf(instance);
-            RecipeBookService.GetBookmarkStorageRecipeIndex(index, out bool indexIsParent);
+            var groupIndex = RecipeBookService.GetBookmarkStorageRecipeIndex(index, out bool indexIsParent);
+            //Do not allow swaps from outside the group
+            if (groupIndex != RecipeBookService.GetBookmarkStorageRecipeIndexForSelectedRecipe()) return;
             //Only allow swaps for sub bookmarks
             if (!indexIsParent) return;
             if (instance.CurrentMovingState == Bookmark.MovingState.Idle) return;

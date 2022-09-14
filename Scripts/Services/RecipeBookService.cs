@@ -84,8 +84,18 @@ namespace PotionCraftBookmarkOrganizer.Scripts.Services
             Managers.Potion.recipeBook.UpdateBookmarkIcon(subBookmarkIndex);
             SubRailService.UpdateStaticBookmark();
             UpdateBookmarkGroupsForCurrentRecipe();
+            var currentIndex = Managers.Potion.recipeBook.currentPageIndex;
+            if (currentIndex == groupIndex)
+            {
+                Managers.Potion.recipeBook.UpdateCurrentPageIndex(subBookmarkIndex);
+            }
+            else if (currentIndex == subBookmarkIndex)
+            {
+                Managers.Potion.recipeBook.UpdateCurrentPageIndex(groupIndex);
+            }
         }
 
+        //This flag and queue appear to never matter since everything occurs synchronously. However the code has been tested with this from the beginning so leave it in for now as a failsafe.
         private static bool currentlyRearranging;
         private static ConcurrentQueue<List<int>> rearrangeQueue = new ConcurrentQueue<List<int>>();
         private static async void BookmarksRearranged(BookmarkController bookmarkController, List<int> intList)
@@ -93,7 +103,6 @@ namespace PotionCraftBookmarkOrganizer.Scripts.Services
             rearrangeQueue.Enqueue(intList);
             if (currentlyRearranging)
             {
-                Plugin.PluginLogger.LogInfo("BookmarksRearranged - ForcedToQueue");
                 while (currentlyRearranging)
                 {
                     await Task.Delay(100);
@@ -104,7 +113,6 @@ namespace PotionCraftBookmarkOrganizer.Scripts.Services
 
         private static async void BookmarksRearranged()
         {
-            Plugin.PluginLogger.LogInfo("BookmarksRearranged");
             currentlyRearranging = true;
             try
             {
@@ -119,7 +127,15 @@ namespace PotionCraftBookmarkOrganizer.Scripts.Services
                     }
                     var oldBookmarks = StaticStorage.BookmarkGroups;
                     var newBookmarks = new Dictionary<int, List<BookmarkStorage>>();
-                    var oldStoredBookmarks = oldBookmarks.SelectMany(b => b.Value).ToDictionary(b => b.recipeIndex);
+                    var oldStoredBookmarksList = oldBookmarks.SelectMany(b => b.Value).ToList();
+                    var duplicateSubBookmarks = oldStoredBookmarksList.GroupBy(b => b.recipeIndex).Where(bg => bg.Count() > 1).ToList();
+                    if (duplicateSubBookmarks.Any())
+                    {
+                        //This should never happen but this is a common error case when indexing bugs are afoot. If there is a bug this should help to fix the issue without orphaning recipes.
+                        Plugin.PluginLogger.LogError("ERROR: somehow the same bookmark is in two different groups!");
+                        duplicateSubBookmarks.ForEach(dbg => oldStoredBookmarksList.Remove(dbg.Last()));
+                    }
+                    var oldStoredBookmarks = oldStoredBookmarksList.ToDictionary(b => b.recipeIndex);
                     for (var newIndex = 0; newIndex < intList.Count; newIndex++)
                     {
                         var oldIndex = intList[newIndex];
@@ -133,12 +149,36 @@ namespace PotionCraftBookmarkOrganizer.Scripts.Services
                     }
                     StaticStorage.BookmarkGroups = newBookmarks;
                 }
+                DoOrphanedBookmarkFailsafe();
             }
             catch (Exception ex)
             {
                 Ex.LogException(ex);
             }
             currentlyRearranging = false;
+        }
+
+        private static void DoOrphanedBookmarkFailsafe()
+        {
+            Managers.Potion.recipeBook.bookmarkControllersGroupController.GetAllBookmarksList().ForEach(bookmark =>
+            {
+                if (bookmark.rail == null || !bookmark.rail.railBookmarks.Contains(bookmark))
+                {
+                    Plugin.PluginLogger.LogError("ERROR: An orphaned bookmark has been found! This is the result of another error!");
+                    var controller = Managers.Potion.recipeBook.bookmarkControllersGroupController.controllers.First().bookmarkController;
+                    //Move the now empty bookmark out of the sub group
+                    var spawnPosition = SubRailService.GetSpawnPosition(controller, BookmarkController.SpaceType.Large)
+                                        ?? SubRailService.GetSpawnPosition(controller, BookmarkController.SpaceType.Medium)
+                                        ?? SubRailService.GetSpawnPosition(controller, BookmarkController.SpaceType.Small)
+                                        ?? SubRailService.GetSpawnPosition(controller, BookmarkController.SpaceType.Min);
+                    if (spawnPosition == null)
+                    {
+                        Plugin.PluginLogger.LogError("DoOrphanedBookmarkFailsafe - There is no empty space for bookmark! Change settings!");
+                        return;
+                    }
+                    SubRailService.ConnectBookmarkToRail(spawnPosition.Item1, bookmark, spawnPosition.Item2);
+                }
+            });
         }
 
         private static int recipeIndexForCurrentGroupUpdate = -1;
@@ -148,7 +188,6 @@ namespace PotionCraftBookmarkOrganizer.Scripts.Services
             var subRailBookmarks = StaticStorage.SubRail.railBookmarks.Select(b => new { bookmark = b, serialized = b.GetSerialized() }).ToList();
             if (currentlyRearranging || rearrangeQueue.Count > 0)
             {
-                Plugin.PluginLogger.LogInfo("UpdateBookmarkGroupsForCurrentRecipe - ForcedToQueue");
                 while (currentlyRearranging || rearrangeQueue.Count > 0)
                 {
                     await Task.Delay(100);
@@ -211,8 +250,8 @@ namespace PotionCraftBookmarkOrganizer.Scripts.Services
             var pagesCount = recipeBook.GetPagesCount();
             recipeBook.curlPageController.HotkeyClicked(nextIndex > recipeBook.currentPageIndex
                                                             ? recipeBook.currentPageIndex.Distance(nextIndex) <= nextIndex.Distance(recipeBook.currentPageIndex + pagesCount)
-                                                            : recipeBook.currentPageIndex.Distance(nextIndex) >= recipeBook.currentPageIndex.Distance(nextIndex + pagesCount)
-                                                        , nextPageIndex: nextIndex);
+                                                            : recipeBook.currentPageIndex.Distance(nextIndex) >= recipeBook.currentPageIndex.Distance(nextIndex + pagesCount),
+                                                        nextPageIndex: nextIndex);
         }
 
         public static void ShowHideGroupBookmarkIcon(Bookmark bookmark, bool show)

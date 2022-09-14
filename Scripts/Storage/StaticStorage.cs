@@ -30,8 +30,6 @@ namespace PotionCraftBookmarkOrganizer.Scripts.Storage
         public static GameObject SubRailActiveBookmarkLayer;
 
         public static bool AddedListeners;
-        public static bool RemovingSubRailBookMarksForPageTurn;
-        public static bool AddingSubRailBookMarksForPageTurn;
         public static bool IsLoaded;
 
         public static CommandInvokeRepeater HotkeyUp;

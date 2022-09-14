@@ -41,6 +41,7 @@ namespace PotionCraftBookmarkOrganizer.Scripts.Patches
             if (!SubRailService.IsSubRail(instance)) return;
             instance.railBookmarks.ForEach(b => b.SetRaycastPriorityLevel(b.inactiveBookmarkButton.raycastPriorityLevel - 500));
             if (instance.railBookmarks.FirstOrDefault() == StaticStorage.StaticBookmark) instance.railBookmarks.RemoveAt(0);
+            StaticStorage.StaticBookmark.transform.parent = StaticStorage.SubRailActiveBookmarkLayer.transform;
         }
 
     }

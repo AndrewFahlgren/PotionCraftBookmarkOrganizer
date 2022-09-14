@@ -192,11 +192,11 @@ namespace PotionCraftBookmarkOrganizer.Scripts.Patches
                 currentSortOrder += 20;
             }
 
-            StaticStorage.SubRailActiveBookmarkLayer = CreateBookmarkLayer(subRailBookmarkContainer, maskSprite, sortingLayerId, sortingLayerName, currentSortOrder, "ActiveBookmarkLayer").Item1;
+            StaticStorage.SubRailActiveBookmarkLayer = CreateBookmarkLayer(subRailBookmarkContainer, maskSprite, sortingLayerId, sortingLayerName, currentSortOrder - 11, "ActiveBookmarkLayer").Item1;
             StaticStorage.SubRailLayers.Reverse();
 
             //Position the sprite at the bottom left corner of the page
-            subRailBookmarkContainer.transform.localPosition = new Vector2(-7.594f, -4.07f); //new Vector2(-8.17f, -4.1f);
+            subRailBookmarkContainer.transform.localPosition = new Vector2(-7.594f, -4.13f); //new Vector2(-8.17f, -4.1f);
 
             subRailPages.transform.localPosition = new Vector2(-7.165f, -4.07f); //new Vector2(-7.181f, -4.082f); TODO apply this everywhere else
             return (subRailPages, subRailBookmarkContainer);
@@ -218,7 +218,7 @@ namespace PotionCraftBookmarkOrganizer.Scripts.Patches
             staticPages.SetActive(false);
             var staticBookmarkContainer = new GameObject("StaticBookmarkContainer");
             staticBookmarkContainer.transform.parent = staticParent.transform;
-            staticBookmarkContainer.transform.localPosition = new Vector2(-0.1365f, 0f);//new Vector2(-0.6982f, 0f);
+            staticBookmarkContainer.transform.localPosition = new Vector2(-0.1365f, -.06f);//new Vector2(-0.6982f, 0f);
             staticBookmarkContainer.SetActive(false);
             StaticStorage.StaticRails[parentPage] = (staticBookmarkContainer, staticPages);
         }
@@ -238,7 +238,7 @@ namespace PotionCraftBookmarkOrganizer.Scripts.Patches
             var mask = maskObject.AddComponent<SpriteMask>();
             mask.sprite = maskSprite;
             maskObject.transform.rotation = Quaternion.Euler(0, 0, 270);
-            maskObject.transform.localPosition += new Vector3(0, -1.61f, 0.96f);
+            maskObject.transform.localPosition += new Vector3(0.06f, -1.61f, 0.96f);
             return (bookmarkLayer, maskObject);
         }
 

@@ -18,8 +18,6 @@ namespace PotionCraftBookmarkOrganizer.Scripts.Storage
         public GameObject SubRailActiveBookmarkLayer => StaticStorage.SubRailActiveBookmarkLayer;
         public BookmarkRail InvisiRail => StaticStorage.InvisiRail;
         public bool AddedListeners => StaticStorage.AddedListeners;
-        public bool RemovingSubRailBookMarksForPageTurn => StaticStorage.RemovingSubRailBookMarksForPageTurn;
-        public bool AddingSubRailBookMarksForPageTurn => StaticStorage.AddingSubRailBookMarksForPageTurn;
 
         void Update()
         {

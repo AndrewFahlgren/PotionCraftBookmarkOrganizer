@@ -15,6 +15,9 @@ namespace PotionCraftBookmarkOrganizer.Scripts.Patches
 {
     public class AddGroupCornerIconToBookmarkPatch
     {
+        private static Vector2 CornerIconLocation = new Vector2(0.245f, 0.675f);
+
+
         [HarmonyPatch(typeof(Bookmark), "UpdateVisualState")]
         public class Bookmark_UpdateVisualState
         {
@@ -29,7 +32,7 @@ namespace PotionCraftBookmarkOrganizer.Scripts.Patches
         {
             static void Postfix(InactiveBookmarkButton __instance)
             {
-                Ex.RunSafe(() => UpdateCornerIconScaleToMatchActiveState(__instance));
+                Ex.RunSafe(() => UpdateCornerIconScaleToMatchActiveState(__instance, true));
             }
         }
 
@@ -38,7 +41,7 @@ namespace PotionCraftBookmarkOrganizer.Scripts.Patches
         {
             static void Postfix(InactiveBookmarkButton __instance)
             {
-                Ex.RunSafe(() => UpdateCornerIconScaleToMatchActiveState(__instance));
+                Ex.RunSafe(() => UpdateCornerIconScaleToMatchActiveState(__instance, false));
             }
         }
 
@@ -78,7 +81,7 @@ namespace PotionCraftBookmarkOrganizer.Scripts.Patches
             mask.sortingLayerName = copyFromRenderer.sortingLayerName;
             mask.sortingOrder = copyFromRenderer.sortingOrder;
 
-            cornerGameObject.transform.localPosition = new Vector2(0.245f, 0.675f);
+            cornerGameObject.transform.localPosition = CornerIconLocation;
             cornerGameObject.transform.rotation = Quaternion.identity;
             cornerGameObject.transform.localEulerAngles = Vector3.zero;
 
@@ -88,21 +91,28 @@ namespace PotionCraftBookmarkOrganizer.Scripts.Patches
 
         private static void UpdateCornerIconScaleToMatchActiveState(Bookmark instance)
         {
-            UpdateCornerIconScaleToMatchActiveState(instance.inactiveBookmarkButton, instance);
+            UpdateCornerIconScaleToMatchActiveState(instance.inactiveBookmarkButton, false, instance);
         }
 
-        private static void UpdateCornerIconScaleToMatchActiveState(InactiveBookmarkButton instance, Bookmark bookmark = null)
+        private static void UpdateCornerIconScaleToMatchActiveState(InactiveBookmarkButton instance, bool isGrabbed, Bookmark bookmark = null)
         {
             if (bookmark == null) bookmark = instance.GetComponentInParent<Bookmark>();
             if (bookmark == null) return;
             if (bookmark == StaticStorage.StaticBookmark) return;
             var cornerGameObject = bookmark.transform.Find(StaticStorage.CornerIconGameObjectName)?.gameObject;
             if (cornerGameObject == null) return;
+            var activeScale = 1.03f;
+            var grabbedScale = 0.97f;
             cornerGameObject.transform.localScale = bookmark.CurrentVisualState == Bookmark.VisualState.Active 
-                                                        ? new Vector3(1.05f, 1.05f, 1.05f) 
-                                                        : Managers.Cursor.grabbedInteractiveItem == instance 
-                                                            ? new Vector3(0.95f, 0.95f, 0.95f) 
+                                                        ? new Vector3(activeScale, activeScale, activeScale) 
+                                                        : isGrabbed
+                                                            ? new Vector3(grabbedScale, grabbedScale, grabbedScale) 
                                                             : Vector3.one;
+            cornerGameObject.transform.localPosition = CornerIconLocation + (bookmark.CurrentVisualState == Bookmark.VisualState.Active
+                                                                                ? new Vector2(0.01f, 0.01f)
+                                                                                : isGrabbed
+                                                                                    ? new Vector2(-0.006f, -0.006f)
+                                                                                    : Vector2.zero);
         }
     }
 }

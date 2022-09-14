@@ -22,9 +22,6 @@ namespace PotionCraftBookmarkOrganizer.Scripts.Patches
 {
     public class RemoveSubBookmarksFromMainRailsOnLoadPatch
     { 
-
-
-
         [HarmonyPatch(typeof(BookmarkController), "LoadFrom")]
         public class BookmarkController_LoadFrom
         {
@@ -72,33 +69,12 @@ namespace PotionCraftBookmarkOrganizer.Scripts.Patches
                     oldListIndex++;
                     continue;
                 }
-                Plugin.PluginLogger.LogInfo($"Deleting bookmark - index: {oldListIndex} - saved: {StaticStorage.SavedRecipePositions[savedRecipeIndex]}");
                 var bookmark = curRail.railBookmarks[railIndex];
                 curRail.railBookmarks.RemoveAt(railIndex);
                 UnityEngine.Object.Destroy(bookmark.gameObject);
                 oldListIndex++;
                 allBookmarksCount--;
             }
-
-
-            //for (int i = 0, ri = 0, sri = 0; i < allBookmarksCount; i++, ri++, sri++)
-            //{
-            //    var curRail = railList[0];
-            //    while (ri >= curRail.railBookmarks.Count)
-            //    {
-            //        ri = 0;
-            //        railList.RemoveAt(0);
-            //        curRail = railList[0];
-            //    }
-            //    var isSubRecipe = StaticStorage.SavedRecipePositions[sri] != i;
-            //    if (!isSubRecipe) continue;
-            //    Plugin.PluginLogger.LogInfo($"Deleting bookmark - index: {i} - saved: {StaticStorage.SavedRecipePositions[sri]}");
-            //    var bookmark = curRail.railBookmarks[ri];
-            //    curRail.railBookmarks.RemoveAt(ri);
-            //    UnityEngine.Object.Destroy(bookmark.gameObject);
-            //    ri--;
-            //    sri--;
-            //}
         }
 
         private static void ReorganizeSavedRecipes()

@@ -56,7 +56,6 @@ namespace PotionCraftBookmarkOrganizer.Scripts.Services
             }
 
             var bookmarksToRemove = StaticStorage.SubRail.railBookmarks.ToList();
-            StaticStorage.RemovingSubRailBookMarksForPageTurn = true;
             bookmarksToRemove.ForEach(b =>
             {
                 var nextAvailSpace = GetNextEmptySpaceOnRail(StaticStorage.InvisiRail);
@@ -66,17 +65,11 @@ namespace PotionCraftBookmarkOrganizer.Scripts.Services
                 }
                 ConnectBookmarkToRail(StaticStorage.InvisiRail, b, nextAvailSpace.Value);
             });
-            StaticStorage.RemovingSubRailBookMarksForPageTurn = false;
-
-            StaticStorage.AddingSubRailBookMarksForPageTurn = true;
-
             saved.ForEach(savedBookmark =>
             {
                 ConnectBookmarkToRail(StaticStorage.SubRail, savedBookmark.bookmark, savedBookmark.savedBookmark.SerializedBookmark.position);
                 savedBookmark.bookmark.CurrentVisualState = savedBookmark.isActive ? Bookmark.VisualState.Active : Bookmark.VisualState.Inactive;
             });
-
-            StaticStorage.AddingSubRailBookMarksForPageTurn = false;
         }
 
         public static List<BookmarkStorage> GetSubRailRecipesForIndex(int nextPageIndex)
