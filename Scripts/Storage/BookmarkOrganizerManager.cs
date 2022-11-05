@@ -12,6 +12,7 @@ namespace PotionCraftBookmarkOrganizer.Scripts.Storage
     public class BookmarkOrganizerManager : MonoBehaviour
     {
         public Dictionary<int, List<BookmarkStorage>> BookmarkGroups => StaticStorage.BookmarkGroups;
+        public List<int> SavedRecipePositions => StaticStorage.SavedRecipePositions;
         public List<Transform> SubRailLayers => StaticStorage.SubRailLayers;
         public Transform InvisiRailLayer => StaticStorage.InvisiRailLayer;
         public BookmarkRail SubRail => StaticStorage.SubRail;

@@ -39,7 +39,30 @@ namespace PotionCraftBookmarkOrganizer.Scripts.Patches
             RemoveSubBookmarksFromMainRails(instance);
             //Do this here because it is right before we load the recipes from the progress state into the recipe book
             ReorganizeSavedRecipes();
+            DoIncorrectCountFailsafe();
             StaticStorage.SavedRecipePositions = null;
+        }
+
+        //The actual cause of this issue may now be fixed however there may still be save files which are in a messed up state
+        private static void DoIncorrectCountFailsafe()
+        {
+            var bookmarkCount = Managers.Potion.recipeBook.bookmarkControllersGroupController.GetAllBookmarksList().Count;
+            var recipeCount = StaticStorage.SavedRecipePositions.Count;
+            if (bookmarkCount == recipeCount) return;
+            Plugin.PluginLogger.LogError("ERROR: There is an incorrect ammount of bookmarks saved. Running failsafe to fix file!");
+            while (bookmarkCount > recipeCount)
+            {
+                var invisiRailCount = StaticStorage.InvisiRail.railBookmarks.Count;
+                if (invisiRailCount == 0)
+                {
+                    Plugin.PluginLogger.LogError("ERROR: Incorrect count failsafe failed to find enough bookmarks on the invisirail to fix count. To recover save file post it in the Potion Craft discord modding channel!");
+                    return;
+                }
+                var bookmark = StaticStorage.InvisiRail.railBookmarks[invisiRailCount - 1];
+                StaticStorage.InvisiRail.railBookmarks.RemoveAt(invisiRailCount - 1);
+                UnityEngine.Object.Destroy(bookmark.gameObject);
+                bookmarkCount--;
+            }
         }
 
         private static void RemoveSubBookmarksFromMainRails(BookmarkController instance)
@@ -60,8 +83,10 @@ namespace PotionCraftBookmarkOrganizer.Scripts.Patches
                     railList.RemoveAt(0);
                     curRail = railList[0];
                 }
-                var isSubRecipe = StaticStorage.SavedRecipePositions[savedRecipeIndex] != oldListIndex;
-                if (!isSubRecipe)
+                var curSavedIndex = StaticStorage.SavedRecipePositions[savedRecipeIndex];
+                var isOutOfPlace = curSavedIndex != oldListIndex;
+                RecipeBookService.GetBookmarkStorageRecipeIndex(curSavedIndex, out bool indexIsParent);
+                if (!isOutOfPlace && !indexIsParent)
                 {
                     railIndex++;
                     index++;
