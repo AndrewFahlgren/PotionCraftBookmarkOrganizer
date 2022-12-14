@@ -22,7 +22,7 @@ If you are not sure where your Potion Craft steam directory is you can find out 
 - Download and install [BepInEx 5.x 64 bit](https://github.com/BepInEx/BepInEx/releases/latest)
   - The contents of the BepInEx zip should be extracted to your PotionCraft steam directory.
   - If properly installed, you should see a `winhttp.dll` file and `BepInEx` folder alongside your `Potion Craft.exe`
-- Download and install [Bookmark Organizer](https://github.com/AndrewFahlgren/PotionCraftBookmarkOrganizer/releases/)
+- Download and install [Bookmark Organizer](https://github.com/AndrewFahlgren/PotionCraftBookmarkOrganizer/releases/latest/)
   - The contents of the BookmarkOrganizer zip should be extracted to your PotionCraft steam directory.
   - If properly installed, you should have a `PotionCraftBookmarkOrganizer.dll` file at `Potion Craft/BepInEx/plugins`
   
