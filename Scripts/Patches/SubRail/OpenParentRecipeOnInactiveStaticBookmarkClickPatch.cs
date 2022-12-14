@@ -22,18 +22,18 @@ namespace PotionCraftBookmarkOrganizer.Scripts.Patches
     /// </summary>
     public class OpenParentRecipeOnInactiveStaticBookmarkClickPatch
     {
-        [HarmonyPatch(typeof(InactiveBookmarkButton), "OnReleasePrimary")]
+        [HarmonyPatch(typeof(BookmarkButtonInactive), "OnReleasePrimary")]
         public class InactiveBookmarkButton_OnReleasePrimary
         {
-            static bool Prefix(InactiveBookmarkButton __instance)
+            static bool Prefix(BookmarkButtonInactive __instance)
             {
                 return Ex.RunSafe(() => DisableGrabbingForInactiveStaticBookmark(__instance));
             }
         }
 
-        private static bool DisableGrabbingForInactiveStaticBookmark(InactiveBookmarkButton instance)
+        private static bool DisableGrabbingForInactiveStaticBookmark(BookmarkButtonInactive instance)
         {
-            var bookmark = typeof(InactiveBookmarkButton).GetField("bookmark", BindingFlags.NonPublic | BindingFlags.Instance).GetValue(instance) as Bookmark;
+            var bookmark = typeof(BookmarkButtonInactive).GetField("bookmark", BindingFlags.NonPublic | BindingFlags.Instance).GetValue(instance) as Bookmark;
             if (bookmark != StaticStorage.StaticBookmark) return true;
             //Set the parent recipe of this group to be active
             var recipeIndex = RecipeBookService.GetBookmarkStorageRecipeIndexForSelectedRecipe();
@@ -46,7 +46,7 @@ namespace PotionCraftBookmarkOrganizer.Scripts.Patches
             if (bookmark.activeBookmarkButton.thisCollider.bounds.Contains(Managers.Input.controlsProvider.CurrentMouseWorldPosition))
                 bookmark.activeBookmarkButton.SetHovered(true);
 
-            typeof(InactiveBookmarkButton).GetField("grabConditionChecked", BindingFlags.NonPublic | BindingFlags.Instance).SetValue(instance, true);
+            typeof(BookmarkButtonInactive).GetField("grabConditionChecked", BindingFlags.NonPublic | BindingFlags.Instance).SetValue(instance, true);
 
             return false;
         }

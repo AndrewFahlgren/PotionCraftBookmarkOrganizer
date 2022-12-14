@@ -1,22 +1,11 @@
 ﻿using HarmonyLib;
-using PotionCraft.Core.ValueContainers;
 using PotionCraft.ManagersSystem;
-using PotionCraft.ObjectBased.RecipeMap;
 using PotionCraft.ObjectBased.UIElements.Bookmarks;
-using PotionCraft.ObjectBased.UIElements.Books.RecipeBook;
-using PotionCraft.ObjectBased.UIElements.PotionCraftPanel;
 using PotionCraft.SaveLoadSystem;
-using PotionCraft.ScriptableObjects;
 using PotionCraftBookmarkOrganizer.Scripts.Services;
 using PotionCraftBookmarkOrganizer.Scripts.Storage;
-using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
-using UnityEngine;
-using static PotionCraft.ObjectBased.UIElements.Bookmarks.Bookmark;
-using static PotionCraft.ObjectBased.UIElements.Bookmarks.BookmarkController;
-using static PotionCraft.ObjectBased.UIElements.Bookmarks.BookmarkRail;
 
 namespace PotionCraftBookmarkOrganizer.Scripts.Patches
 {
@@ -35,34 +24,16 @@ namespace PotionCraftBookmarkOrganizer.Scripts.Patches
         {
             if (instance != Managers.Potion.recipeBook.bookmarkControllersGroupController.controllers.First().bookmarkController) return;
             //If there are no saved recipe positions then there is nothing to remove
-            if (StaticStorage.SavedRecipePositions == null || !StaticStorage.SavedRecipePositions.Any()) return;
+            if (StaticStorage.SavedRecipePositions == null || !StaticStorage.SavedRecipePositions.Any())
+            {
+                DoHardResetIfNeeded(instance);
+                return;
+            }
             RemoveSubBookmarksFromMainRails(instance);
             //Do this here because it is right before we load the recipes from the progress state into the recipe book
             ReorganizeSavedRecipes();
             DoIncorrectCountFailsafe();
             StaticStorage.SavedRecipePositions = null;
-        }
-
-        //The actual cause of this issue may now be fixed however there may still be save files which are in a messed up state
-        private static void DoIncorrectCountFailsafe()
-        {
-            var bookmarkCount = Managers.Potion.recipeBook.bookmarkControllersGroupController.GetAllBookmarksList().Count;
-            var recipeCount = StaticStorage.SavedRecipePositions.Count;
-            if (bookmarkCount == recipeCount) return;
-            Plugin.PluginLogger.LogError("ERROR: There is an incorrect ammount of bookmarks saved. Running failsafe to fix file!");
-            while (bookmarkCount > recipeCount)
-            {
-                var invisiRailCount = StaticStorage.InvisiRail.railBookmarks.Count;
-                if (invisiRailCount == 0)
-                {
-                    Plugin.PluginLogger.LogError("ERROR: Incorrect count failsafe failed to find enough bookmarks on the invisirail to fix count. To recover save file post it in the Potion Craft discord modding channel!");
-                    return;
-                }
-                var bookmark = StaticStorage.InvisiRail.railBookmarks[invisiRailCount - 1];
-                StaticStorage.InvisiRail.railBookmarks.RemoveAt(invisiRailCount - 1);
-                UnityEngine.Object.Destroy(bookmark.gameObject);
-                bookmarkCount--;
-            }
         }
 
         private static void RemoveSubBookmarksFromMainRails(BookmarkController instance)
@@ -85,7 +56,7 @@ namespace PotionCraftBookmarkOrganizer.Scripts.Patches
                 }
                 var curSavedIndex = StaticStorage.SavedRecipePositions[savedRecipeIndex];
                 var isOutOfPlace = curSavedIndex != oldListIndex;
-                RecipeBookService.GetBookmarkStorageRecipeIndex(curSavedIndex, out bool indexIsParent);
+                RecipeBookService.GetBookmarkStorageRecipeIndex(index, out bool indexIsParent);
                 if (!isOutOfPlace && !indexIsParent)
                 {
                     railIndex++;
@@ -111,6 +82,66 @@ namespace PotionCraftBookmarkOrganizer.Scripts.Patches
                 potionList.Add(progressState.savedRecipes[StaticStorage.SavedRecipePositions[i]]);
             }
             progressState.savedRecipes = potionList;
+        }
+
+        //The actual cause of this issue may now be fixed however there may still be save files which are in a messed up state
+        private static void DoIncorrectCountFailsafe()
+        {
+            var bookmarkCount = Managers.Potion.recipeBook.bookmarkControllersGroupController.GetAllBookmarksList().Count;
+            var recipeCount = StaticStorage.SavedRecipePositions?.Count ?? Managers.Potion.recipeBook.savedRecipes.Count;
+            if (bookmarkCount == recipeCount) return;
+            while (bookmarkCount > recipeCount)
+            {
+                var invisiRailCount = StaticStorage.InvisiRail.railBookmarks.Count;
+                if (invisiRailCount == 0)
+                {
+                    Plugin.PluginLogger.LogError("ERROR: Incorrect count failsafe failed to find enough bookmarks on the invisirail to fix count. To recover save file post it in the Potion Craft discord modding channel!");
+                    return;
+                }
+                var bookmark = StaticStorage.InvisiRail.railBookmarks[invisiRailCount - 1];
+                StaticStorage.InvisiRail.railBookmarks.RemoveAt(invisiRailCount - 1);
+                UnityEngine.Object.Destroy(bookmark.gameObject);
+                bookmarkCount--;
+            }
+        }
+
+        private static void DoHardResetIfNeeded(BookmarkController instance)
+        {
+            //There is a bug where saved recipe positions do not save meaning we also need to do a failsafe here
+            var bookmarkCount = Managers.Potion.recipeBook.bookmarkControllersGroupController.GetAllBookmarksList().Count;
+            var recipeCount = Managers.SaveLoad.SelectedProgressState.savedRecipes.Count;
+            if (bookmarkCount == recipeCount) return;
+            Plugin.PluginLogger.LogError("ERROR: There is an incorrect ammount of bookmarks saved. Running failsafe to fix file! - 1");
+            var savedGroupCount = StaticStorage.BookmarkGroups.SelectMany(b => b.Value).Count();
+            var mainRails = instance.rails.Except(new[] { StaticStorage.SubRail, StaticStorage.InvisiRail }).ToList();
+            while (bookmarkCount > recipeCount)
+            {
+                BookmarkRail railToRemove = null;
+                if (StaticStorage.InvisiRail.railBookmarks.Count > 0)
+                {
+                    railToRemove = StaticStorage.InvisiRail;
+                }
+                else if (StaticStorage.SubRail.railBookmarks.Count > 0)
+                {
+                    railToRemove = StaticStorage.SubRail;
+                }
+                else
+                {
+                    railToRemove = mainRails.LastOrDefault(r => r.railBookmarks.Count > 0);
+                }
+                if (railToRemove == null)
+                {
+                    Plugin.PluginLogger.LogError("ERROR: Incorrect count failsafe failed to find enough bookmarks on any rails to fix count. To recover save file post it in the Potion Craft discord modding channel!");
+                    return;
+                }
+                var bookmark = railToRemove.railBookmarks[railToRemove.railBookmarks.Count - 1];
+                railToRemove.railBookmarks.RemoveAt(railToRemove.railBookmarks.Count - 1);
+                UnityEngine.Object.Destroy(bookmark.gameObject);
+                bookmarkCount--;
+            }
+            //Clear out bookmark groups so we can start fresh
+            StaticStorage.BookmarkGroups.Clear();
+            StaticStorage.SavedRecipePositions = null;
         }
     }
 }

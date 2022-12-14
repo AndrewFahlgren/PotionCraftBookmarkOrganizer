@@ -245,7 +245,7 @@ namespace PotionCraftBookmarkOrganizer.Scripts.Services
 
         public static void FlipPageToIndex(int nextIndex)
         {
-            if (Managers.Cursor.grabbedInteractiveItem is InactiveBookmarkButton) return;
+            if (Managers.Cursor.grabbedInteractiveItem is BookmarkButtonInactive) return;
             var recipeBook = Managers.Potion.recipeBook;
             var pagesCount = recipeBook.GetPagesCount();
             recipeBook.curlPageController.HotkeyClicked(nextIndex > recipeBook.currentPageIndex

@@ -27,19 +27,19 @@ namespace PotionCraftBookmarkOrganizer.Scripts.Patches
             }
         }
 
-        [HarmonyPatch(typeof(InactiveBookmarkButton), "OnGrabPrimary")]
+        [HarmonyPatch(typeof(BookmarkButtonInactive), "OnGrabPrimary")]
         public class InactiveBookmarkButton_OnGrabPrimary
         {
-            static void Postfix(InactiveBookmarkButton __instance)
+            static void Postfix(BookmarkButtonInactive __instance)
             {
                 Ex.RunSafe(() => UpdateCornerIconScaleToMatchActiveState(__instance, true));
             }
         }
 
-        [HarmonyPatch(typeof(InactiveBookmarkButton), "OnReleasePrimary")]
+        [HarmonyPatch(typeof(BookmarkButtonInactive), "OnReleasePrimary")]
         public class InactiveBookmarkButton_OnReleasePrimary
         {
-            static void Postfix(InactiveBookmarkButton __instance)
+            static void Postfix(BookmarkButtonInactive __instance)
             {
                 Ex.RunSafe(() => UpdateCornerIconScaleToMatchActiveState(__instance, false));
             }
@@ -94,7 +94,7 @@ namespace PotionCraftBookmarkOrganizer.Scripts.Patches
             UpdateCornerIconScaleToMatchActiveState(instance.inactiveBookmarkButton, false, instance);
         }
 
-        private static void UpdateCornerIconScaleToMatchActiveState(InactiveBookmarkButton instance, bool isGrabbed, Bookmark bookmark = null)
+        private static void UpdateCornerIconScaleToMatchActiveState(BookmarkButtonInactive instance, bool isGrabbed, Bookmark bookmark = null)
         {
             if (bookmark == null) bookmark = instance.GetComponentInParent<Bookmark>();
             if (bookmark == null) return;

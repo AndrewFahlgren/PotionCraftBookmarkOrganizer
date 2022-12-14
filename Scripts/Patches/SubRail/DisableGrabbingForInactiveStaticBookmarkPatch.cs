@@ -21,18 +21,18 @@ namespace PotionCraftBookmarkOrganizer.Scripts.Patches
     /// </summary>
     public class DisableGrabbingForInactiveStaticBookmarkPatch
     { 
-        [HarmonyPatch(typeof(InactiveBookmarkButton), "OnGrabPrimary")]
+        [HarmonyPatch(typeof(BookmarkButtonInactive), "OnGrabPrimary")]
         public class InactiveBookmarkButton_OnGrabPrimary
         {
-            static bool Prefix(InactiveBookmarkButton __instance)
+            static bool Prefix(BookmarkButtonInactive __instance)
             {
                 return Ex.RunSafe(() => DisableGrabbingForInactiveStaticBookmark(__instance));
             }
         }
 
-        private static bool DisableGrabbingForInactiveStaticBookmark(InactiveBookmarkButton instance)
+        private static bool DisableGrabbingForInactiveStaticBookmark(BookmarkButtonInactive instance)
         {
-            var bookmark = typeof(InactiveBookmarkButton).GetField("bookmark", BindingFlags.NonPublic | BindingFlags.Instance).GetValue(instance) as Bookmark;
+            var bookmark = typeof(BookmarkButtonInactive).GetField("bookmark", BindingFlags.NonPublic | BindingFlags.Instance).GetValue(instance) as Bookmark;
             return bookmark != StaticStorage.StaticBookmark;
         }
     }

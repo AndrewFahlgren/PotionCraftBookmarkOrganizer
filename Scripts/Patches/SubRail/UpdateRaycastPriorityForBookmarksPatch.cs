@@ -39,6 +39,7 @@ namespace PotionCraftBookmarkOrganizer.Scripts.Patches
         private static void UpdateRaycastPriorityForBookmarks(BookmarkRail instance)
         {
             if (!SubRailService.IsSubRail(instance)) return;
+            if (StaticStorage.StaticBookmark == null) return;
             instance.railBookmarks.ForEach(b => b.SetRaycastPriorityLevel(b.inactiveBookmarkButton.raycastPriorityLevel - 500));
             if (instance.railBookmarks.FirstOrDefault() == StaticStorage.StaticBookmark) instance.railBookmarks.RemoveAt(0);
             StaticStorage.StaticBookmark.transform.parent = StaticStorage.SubRailActiveBookmarkLayer.transform;

@@ -32,7 +32,7 @@ namespace PotionCraftBookmarkOrganizer.Scripts.Patches
 
         private static bool DisableRecipeBookHotkeysWhileDraggingBookmark()
         {
-            return Managers.Cursor.grabbedInteractiveItem is not InactiveBookmarkButton;
+            return Managers.Cursor.grabbedInteractiveItem is not BookmarkButtonInactive;
         }
     }
 }
