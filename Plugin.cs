@@ -5,11 +5,12 @@ using System.Reflection;
 
 namespace PotionCraftBookmarkOrganizer
 {
-    [BepInPlugin(PLUGIN_GUID, "PotionCraftBookmarkOrganizer", "1.0.2.1")]
+    [BepInPlugin(PLUGIN_GUID, "PotionCraftBookmarkOrganizer", PLUGIN_VERSION)]
     [BepInProcess("Potion Craft.exe")]
     public class Plugin : BaseUnityPlugin
     {
         public const string PLUGIN_GUID = "com.fahlgorithm.potioncraftbookmarkorganizer";
+        public const string PLUGIN_VERSION = "1.0.5.0";
 
         public static ManualLogSource PluginLogger {get; private set; }
 
