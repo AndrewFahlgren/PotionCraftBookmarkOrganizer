@@ -146,6 +146,7 @@ namespace PotionCraftBookmarkOrganizer.Scripts.Patches
         private static List<MinMaxFloat> GetEmptySegments(BookmarkRail rail, SpaceType spaceType, Dictionary<BookmarkRail, List<(SerializedBookmark, int)>> subBookmarks)
         {
             var emptySegments = rail.GetEmptySegments(spaceType);
+            if (!subBookmarks.ContainsKey(rail)) return emptySegments;
             var remainingSubBookmarks = subBookmarks[rail].OrderBy(b => b.Item1.position.x).ToList();
             for (var i = 0; i < emptySegments.Count; i++)
             {

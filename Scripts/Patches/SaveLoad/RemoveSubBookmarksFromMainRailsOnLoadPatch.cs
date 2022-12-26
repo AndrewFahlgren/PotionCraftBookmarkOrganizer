@@ -114,7 +114,7 @@ namespace PotionCraftBookmarkOrganizer.Scripts.Patches
             Plugin.PluginLogger.LogError("ERROR: There is an incorrect ammount of bookmarks saved. Running failsafe to fix file! - 1");
             var savedGroupCount = StaticStorage.BookmarkGroups.SelectMany(b => b.Value).Count();
             var mainRails = instance.rails.Except(new[] { StaticStorage.SubRail, StaticStorage.InvisiRail }).ToList();
-            while (bookmarkCount > recipeCount)
+            while (StaticStorage.InvisiRail.railBookmarks.Count > 0 || StaticStorage.SubRail.railBookmarks.Count > 0 || bookmarkCount > recipeCount)
             {
                 BookmarkRail railToRemove = null;
                 if (StaticStorage.InvisiRail.railBookmarks.Count > 0)
@@ -139,9 +139,25 @@ namespace PotionCraftBookmarkOrganizer.Scripts.Patches
                 UnityEngine.Object.Destroy(bookmark.gameObject);
                 bookmarkCount--;
             }
+
             //Clear out bookmark groups so we can start fresh
             StaticStorage.BookmarkGroups.Clear();
             StaticStorage.SavedRecipePositions = null;
+
+            while (bookmarkCount < recipeCount)
+            {
+                var spawnPosition = SubRailService.GetSpawnPosition(instance, BookmarkController.SpaceType.Large)
+                                   ?? SubRailService.GetSpawnPosition(instance, BookmarkController.SpaceType.Medium)
+                                   ?? SubRailService.GetSpawnPosition(instance, BookmarkController.SpaceType.Small)
+                                   ?? SubRailService.GetSpawnPosition(instance, BookmarkController.SpaceType.Min);
+                if (spawnPosition == null)
+                {
+                    Plugin.PluginLogger.LogError("There is no empty space for bookmark! Change settings!");
+                    return;
+                }
+                spawnPosition.Item1.SpawnBookmarkAt(0, spawnPosition.Item2, false);
+                bookmarkCount++;
+            }
         }
     }
 }
