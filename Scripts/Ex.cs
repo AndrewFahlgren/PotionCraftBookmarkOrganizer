@@ -1,4 +1,5 @@
-﻿using System;
+﻿using PotionCraftBookmarkOrganizer.Scripts.Storage;
+using System;
 using System.Collections.Generic;
 using System.Text;
 
@@ -15,7 +16,7 @@ namespace PotionCraftBookmarkOrganizer.Scripts
         /// <param name="action">the code to run.</param>
         /// <param name="errorAction">optional. Runs this code on error if provided.</param>
         /// <returns>true on error unless an errorAction is specified</returns>
-        public static bool RunSafe(Func<bool> action, Func<bool> errorAction = null)
+        public static bool RunSafe(Func<bool> action, Func<bool> errorAction = null, bool logErrorToStorage = false)
         {
             try
             {
@@ -23,7 +24,7 @@ namespace PotionCraftBookmarkOrganizer.Scripts
             }
             catch (Exception ex)
             {
-                LogException(ex);
+                LogException(ex, logErrorToStorage);
             }
             if (errorAction == null)
                 return true;
@@ -37,7 +38,7 @@ namespace PotionCraftBookmarkOrganizer.Scripts
         /// <param name="action">the code to run.</param>
         /// <param name="errorAction">optional. Runs this code on error if provided.</param>
         /// <returns>true on error unless an errorAction is specified</returns>
-        public static void RunSafe(Action action, Action errorAction = null)
+        public static void RunSafe(Action action, Action errorAction = null, bool logErrorToStorage = false)
         {
             try
             {
@@ -45,15 +46,24 @@ namespace PotionCraftBookmarkOrganizer.Scripts
             }
             catch (Exception ex)
             {
-                LogException(ex);
+                LogException(ex, logErrorToStorage);
                 if (errorAction != null) errorAction();
             }
         }
 
-        public static void LogException(Exception ex)
+        public static void LogException(Exception ex, bool logErrorToStorage = false)
         {
-            var errorMessage = $"{ex.GetType()}: {ex.Message}\r\n{ex.StackTrace}\r\n{ex.InnerException?.Message}";
-            Plugin.PluginLogger.LogError(errorMessage);
+            var exceptionText = GetExceptionText(ex);
+            Plugin.PluginLogger.LogError(exceptionText);
+            if (logErrorToStorage)
+            {
+                StaticStorage.ErrorLog.Add(exceptionText);
+            }
+        }
+
+        public static string GetExceptionText(Exception ex)
+        {
+            return $"{DateTime.UtcNow}: {ex.GetType()}: {ex.Message}\r\n{ex.StackTrace}\r\n{ex.InnerException?.Message}";
         }
     }
 }

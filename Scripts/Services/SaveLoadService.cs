@@ -31,7 +31,9 @@ namespace PotionCraftBookmarkOrganizer.Scripts.Services
                 var toSerialize = new StaticStorage.SavedStaticStorage
                 {
                     BookmarkGroups = StaticStorage.BookmarkGroups,
-                    SavedRecipePositions = StaticStorage.SavedRecipePositions
+                    SavedRecipePositions = StaticStorage.SavedRecipePositions,
+                    ErrorLog = StaticStorage.ErrorLog,
+                    BookmarkManagerVersion = Plugin.PLUGIN_GUID
                 };
                 var serializedGroups = JsonConvert.SerializeObject(toSerialize, new JsonSerializerSettings { ReferenceLoopHandling = ReferenceLoopHandling.Ignore });
 

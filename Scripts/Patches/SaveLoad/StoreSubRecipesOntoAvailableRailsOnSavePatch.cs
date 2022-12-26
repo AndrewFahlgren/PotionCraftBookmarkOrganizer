@@ -41,10 +41,10 @@ namespace PotionCraftBookmarkOrganizer.Scripts.Patches
                 var allSubBookmarks = StaticStorage.BookmarkGroups.SelectMany(bg => bg.Value).ToList();
                 allSubBookmarks.ForEach(bookmark =>
                 {
-                    var spawnPosition = SubRailService.GetSpawnPosition(instance, SpaceType.Large)
-                                        ?? SubRailService.GetSpawnPosition(instance, SpaceType.Medium)
-                                        ?? SubRailService.GetSpawnPosition(instance, SpaceType.Small)
-                                        ?? SubRailService.GetSpawnPosition(instance, SpaceType.Min);
+                    var spawnPosition = GetSpawnPosition(instance, SpaceType.Large, subBookmarkPositions)
+                                        ?? GetSpawnPosition(instance, SpaceType.Medium, subBookmarkPositions)
+                                        ?? GetSpawnPosition(instance, SpaceType.Small, subBookmarkPositions)
+                                        ?? GetSpawnPosition(instance, SpaceType.Min, subBookmarkPositions);
 
                     if (!subBookmarkPositions.ContainsKey(spawnPosition.Item1))
                     {
@@ -61,7 +61,7 @@ namespace PotionCraftBookmarkOrganizer.Scripts.Patches
                 serialized.serializedRails = instance.rails.Select(rail => GetSerialized(rail, subBookmarkPositions)).ToList();
                 //Since we messed with the order of the bookmarks we need to change the saved recipe order to ensure recipes are in their proper bookmarks on load (if the mod gets uninstalled)
                 RearrangeSavedBookmarksToWorkForBookmarkOrder(serialized, subBookmarkPositions);
-            });
+            }, null, true);
             result = serialized;
             return false;
         }

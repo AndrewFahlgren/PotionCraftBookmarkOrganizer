@@ -16,7 +16,7 @@ namespace PotionCraftBookmarkOrganizer.Scripts.Patches
         {
             static void Postfix(BookmarkController __instance)
             {
-                Ex.RunSafe(() => RemoveSubBookmarksFromMainRailsOnLoad( __instance));
+                Ex.RunSafe(() => RemoveSubBookmarksFromMainRailsOnLoad( __instance), null, true);
             }
         }
 

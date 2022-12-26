@@ -18,6 +18,7 @@ namespace PotionCraftBookmarkOrganizer.Scripts.Storage
 
         public static Dictionary<int, List<BookmarkStorage>> BookmarkGroups = new();
         public static List<int> SavedRecipePositions;
+        public static List<string> ErrorLog = new();
 
         public static BookmarkRail SubRail;
         public static GameObject SubRailPages;
@@ -41,6 +42,8 @@ namespace PotionCraftBookmarkOrganizer.Scripts.Storage
         {
             public Dictionary<int, List<BookmarkStorage>> BookmarkGroups { get; set; }
             public List<int> SavedRecipePositions { get; set; }
+            public List<string> ErrorLog { get; set; }
+            public string BookmarkManagerVersion { get; set; }
         }
     }
 }
