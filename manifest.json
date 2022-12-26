@@ -2,10 +2,10 @@
   "$schema": "https://github.com/beat-saber-modding-group/BSIPA-MetadataFileSchema/blob/master/Schema.json",
   "author": "com.fahlgorithm.potioncraftbookmarkorganizer",
   "description": "A mod to allow you to organize bookmarks into groups.",
-  "gameVersion": "1.0.5.0",
+  "gameVersion": "1.0.5.1",
   "id": "PotionCraftBookmarkOrganizer",
   "name": "PotionCraftBookmarkOrganizer",
-  "version": "1.0.5.0",
+  "version": "1.0.5.1",
   "dependsOn": {}
 
 }
