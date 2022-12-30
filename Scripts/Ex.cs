@@ -65,5 +65,10 @@ namespace PotionCraftBookmarkOrganizer.Scripts
         {
             return $"{DateTime.UtcNow}: {ex.GetType()}: {ex.Message}\r\n{ex.StackTrace}\r\n{ex.InnerException?.Message}";
         }
+
+        public static void SaveErrorMessage(string errorMessage)
+        {
+            StaticStorage.ErrorLog.Add($"{DateTime.UtcNow}: {errorMessage}");
+        }
     }
 }

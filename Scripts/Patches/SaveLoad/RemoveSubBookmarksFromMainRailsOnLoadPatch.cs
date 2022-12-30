@@ -90,6 +90,9 @@ namespace PotionCraftBookmarkOrganizer.Scripts.Patches
             var bookmarkCount = Managers.Potion.recipeBook.bookmarkControllersGroupController.GetAllBookmarksList().Count;
             var recipeCount = StaticStorage.SavedRecipePositions?.Count ?? Managers.Potion.recipeBook.savedRecipes.Count;
             if (bookmarkCount == recipeCount) return;
+            var errorMessage = "ERROR: There is an incorrect ammount of bookmarks saved. Running failsafe to fix file! - 2";
+            Plugin.PluginLogger.LogError(errorMessage);
+            Ex.SaveErrorMessage(errorMessage);
             while (bookmarkCount > recipeCount)
             {
                 var invisiRailCount = StaticStorage.InvisiRail.railBookmarks.Count;
@@ -111,7 +114,9 @@ namespace PotionCraftBookmarkOrganizer.Scripts.Patches
             var bookmarkCount = Managers.Potion.recipeBook.bookmarkControllersGroupController.GetAllBookmarksList().Count;
             var recipeCount = Managers.SaveLoad.SelectedProgressState.savedRecipes.Count;
             if (bookmarkCount == recipeCount) return;
-            Plugin.PluginLogger.LogError("ERROR: There is an incorrect ammount of bookmarks saved. Running failsafe to fix file! - 1");
+            var errorMessage = "ERROR: There is an incorrect ammount of bookmarks saved. Running failsafe to fix file! - 1";
+            Plugin.PluginLogger.LogError(errorMessage);
+            Ex.SaveErrorMessage(errorMessage);
             var savedGroupCount = StaticStorage.BookmarkGroups.SelectMany(b => b.Value).Count();
             var mainRails = instance.rails.Except(new[] { StaticStorage.SubRail, StaticStorage.InvisiRail }).ToList();
             while (StaticStorage.InvisiRail.railBookmarks.Count > 0 || StaticStorage.SubRail.railBookmarks.Count > 0 || bookmarkCount > recipeCount)
