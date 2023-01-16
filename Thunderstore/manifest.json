@@ -1,6 +1,6 @@
 ﻿{
   "name": "Bookmark_Organizer",
-  "version_number": "1.0.5",
+  "version_number": "1.0.6",
   "website_url": "https://github.com/AndrewFahlgren/PotionCraftBookmarkOrganizer",
   "description": "A mod to allow you to organize bookmarks into groups! Compatible with Potion Craft v1.0!",
   "dependencies": [
