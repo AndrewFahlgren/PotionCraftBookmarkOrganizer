@@ -3,16 +3,12 @@ using PotionCraft.InputSystem;
 using PotionCraft.ManagersSystem;
 using PotionCraft.ManagersSystem.Cursor;
 using PotionCraft.ObjectBased.UIElements.Bookmarks;
-using PotionCraft.ObjectBased.UIElements.Books.RecipeBook;
-using PotionCraft.ScriptableObjects;
 using PotionCraftBookmarkOrganizer.Scripts.Storage;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
-using static PotionCraft.SaveLoadSystem.ProgressState;
 
 namespace PotionCraftBookmarkOrganizer.Scripts.Services
 {
@@ -69,30 +65,42 @@ namespace PotionCraftBookmarkOrganizer.Scripts.Services
             return nextIndex;
         }
 
+        private static bool ignoreBookmarkRearrangeForSubBookmarkPromotion;
         public static void PromoteIndexToParent(int subBookmarkIndex)
         {
             var groupIndex = GetBookmarkStorageRecipeIndex(subBookmarkIndex, out bool indexIsParent);
             if (!indexIsParent) return;
-            var recipeList = Managers.Potion.recipeBook.savedRecipes;
-            var subRecipe = recipeList[subBookmarkIndex];
-            var groupRecipe = recipeList[groupIndex];
-            recipeList.RemoveAt(groupIndex);
-            recipeList.Insert(groupIndex, subRecipe);
-            recipeList.RemoveAt(subBookmarkIndex);
-            recipeList.Insert(subBookmarkIndex, groupRecipe);
+            var bookmarkList = Managers.Potion.recipeBook.bookmarkControllersGroupController.GetAllBookmarksList();
+            var subBookmark = bookmarkList[subBookmarkIndex];
+            var groupBookmark = bookmarkList[groupIndex];
+            var groupBookmarkPosition = groupBookmark.GetNormalizedPosition();
+            var subBookmarkPosition = subBookmark.GetNormalizedPosition();
+
+            var bookmarkController = Managers.Potion.recipeBook.bookmarkControllersGroupController.controllers[0].bookmarkController;
+            var i = 0;
+            var railList = bookmarkController.rails.ToList().Select(rail => (rail, bookmarks: rail.railBookmarks.ToList())).ToList();
+            railList.ForEach(rail =>
+            {
+                rail.bookmarks.ForEach(bookmark =>
+                {
+                    if (i == groupIndex)
+                        rail.rail.Connect(subBookmark, groupBookmarkPosition);
+                    else if (i == subBookmarkIndex)
+                        rail.rail.Connect(groupBookmark, subBookmarkPosition);
+                    i++;
+                });
+            });
+
+            ignoreBookmarkRearrangeForSubBookmarkPromotion = true;
+            bookmarkController.CallOnBookmarksRearrangeIfNecessary(bookmarkList);
+            ignoreBookmarkRearrangeForSubBookmarkPromotion = false;
+
             Managers.Potion.recipeBook.UpdateBookmarkIcon(groupIndex);
             Managers.Potion.recipeBook.UpdateBookmarkIcon(subBookmarkIndex);
             SubRailService.UpdateStaticBookmark();
             UpdateBookmarkGroupsForCurrentRecipe();
-            var currentIndex = Managers.Potion.recipeBook.currentPageIndex;
-            if (currentIndex == groupIndex)
-            {
-                Managers.Potion.recipeBook.UpdateCurrentPageIndex(subBookmarkIndex);
-            }
-            else if (currentIndex == subBookmarkIndex)
-            {
-                Managers.Potion.recipeBook.UpdateCurrentPageIndex(groupIndex);
-            }
+            ShowHideGroupBookmarkIcon(groupBookmark, false);
+            SubRailService.UpdateSubBookmarksActiveState();
         }
 
         //This flag and queue appear to never matter since everything occurs synchronously. However the code has been tested with this from the beginning so leave it in for now as a failsafe.
@@ -100,6 +108,7 @@ namespace PotionCraftBookmarkOrganizer.Scripts.Services
         private static ConcurrentQueue<List<int>> rearrangeQueue = new ConcurrentQueue<List<int>>();
         private static async void BookmarksRearranged(BookmarkController bookmarkController, List<int> intList)
         {
+            if (ignoreBookmarkRearrangeForSubBookmarkPromotion) return;
             rearrangeQueue.Enqueue(intList);
             if (currentlyRearranging)
             {

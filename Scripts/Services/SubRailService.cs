@@ -144,6 +144,21 @@ namespace PotionCraftBookmarkOrganizer.Scripts.Services
             }
         }
 
+        public static void UpdateSubBookmarksActiveState()
+        {
+            var bookmarks = StaticStorage.SubRail.railBookmarks;
+            var firstBookmark = bookmarks.FirstOrDefault();
+            if (firstBookmark == null) return;
+            var startingSubRailIndex = Managers.Potion.recipeBook.bookmarkControllersGroupController.GetAllBookmarksList().IndexOf(firstBookmark);
+            for (var i = 0; i < bookmarks.Count; i++)
+            {
+                var trueIndex = i + startingSubRailIndex;
+                bookmarks[i].CurrentVisualState = trueIndex == Managers.Potion.recipeBook.currentPageIndex
+                                                        ? Bookmark.VisualState.Active
+                                                        : Bookmark.VisualState.Inactive;
+            }
+        }
+
         public static Tuple<BookmarkRail, Vector2> GetSpawnPosition(BookmarkController bookmarkController, SpaceType spaceType)
         {
             var nonSpecialRails = bookmarkController.rails.Except(new[] { StaticStorage.SubRail, StaticStorage.InvisiRail }).ToList();
