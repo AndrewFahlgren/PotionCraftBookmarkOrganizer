@@ -4,8 +4,11 @@ using PotionCraft.ObjectBased.UIElements.Bookmarks;
 using PotionCraft.SaveLoadSystem;
 using PotionCraftBookmarkOrganizer.Scripts.Services;
 using PotionCraftBookmarkOrganizer.Scripts.Storage;
+using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
+using UnityEngine;
 
 namespace PotionCraftBookmarkOrganizer.Scripts.Patches
 {
@@ -34,6 +37,7 @@ namespace PotionCraftBookmarkOrganizer.Scripts.Patches
             ReorganizeSavedRecipes();
             DoIncorrectCountFailsafe();
             StaticStorage.SavedRecipePositions = null;
+            ReparentOrphanedBookmarksFailsafe(instance);
         }
 
         private static void RemoveSubBookmarksFromMainRails(BookmarkController instance)
@@ -163,6 +167,26 @@ namespace PotionCraftBookmarkOrganizer.Scripts.Patches
                 spawnPosition.Item1.SpawnBookmarkAt(0, spawnPosition.Item2, false);
                 bookmarkCount++;
             }
+        }
+
+        private static void ReparentOrphanedBookmarksFailsafe(BookmarkController instance)
+        {
+            var allBookmarkList = instance.GetAllBookmarksList();
+            StaticStorage.InvisiRail.railBookmarks.ToList().ForEach(invisiBookmark =>
+            {
+                var index = allBookmarkList.IndexOf(invisiBookmark);
+                if (StaticStorage.BookmarkGroups.Any(bg => bg.Value.Any(b => b.recipeIndex == index))) return;
+
+                Plugin.PluginLogger.LogError($"ERROR: Orphaned bookmark found at index: {index}. Moving orphaned bookmark to main rails!");
+
+                var spawnPosition = SubRailService.GetSpawnPosition(instance, BookmarkController.SpaceType.Large)
+                                    ?? SubRailService.GetSpawnPosition(instance, BookmarkController.SpaceType.Medium)
+                                    ?? SubRailService.GetSpawnPosition(instance, BookmarkController.SpaceType.Small)
+                                    ?? SubRailService.GetSpawnPosition(instance, BookmarkController.SpaceType.Min)
+                                    ?? new Tuple<BookmarkRail, Vector2>(instance.rails[0], Vector2.zero);
+                SubRailService.ConnectBookmarkToRail(spawnPosition.Item1, invisiBookmark, spawnPosition.Item2);
+                allBookmarkList = instance.GetAllBookmarksList();
+            });
         }
     }
 }

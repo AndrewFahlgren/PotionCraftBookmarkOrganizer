@@ -39,12 +39,27 @@ namespace PotionCraftBookmarkOrganizer.Scripts.Patches
             {
                 var subBookmarkPositions = new Dictionary<BookmarkRail, List<(SerializedBookmark, int)>>();
                 var allSubBookmarks = StaticStorage.BookmarkGroups.SelectMany(bg => bg.Value).ToList();
+                Tuple<BookmarkRail, Vector2> defaultSpawnPosition = null;
                 allSubBookmarks.ForEach(bookmark =>
                 {
                     var spawnPosition = GetSpawnPosition(instance, SpaceType.Large, subBookmarkPositions)
                                         ?? GetSpawnPosition(instance, SpaceType.Medium, subBookmarkPositions)
                                         ?? GetSpawnPosition(instance, SpaceType.Small, subBookmarkPositions)
                                         ?? GetSpawnPosition(instance, SpaceType.Min, subBookmarkPositions);
+
+                    if (defaultSpawnPosition == null)
+                    {
+                        defaultSpawnPosition = spawnPosition;
+                    }
+
+                    if (spawnPosition == null)
+                    {
+                        if (defaultSpawnPosition == null) defaultSpawnPosition = new Tuple<BookmarkRail, Vector2>(instance.rails[0], Vector2.zero);
+                        spawnPosition = defaultSpawnPosition;
+                    }
+
+                    //Make sure we never put two bookmarks at exactly the same position to ensure reliable indexing
+                    defaultSpawnPosition = MoveDefaultSpawnPosition(defaultSpawnPosition);
 
                     if (!subBookmarkPositions.ContainsKey(spawnPosition.Item1))
                     {
@@ -58,12 +73,59 @@ namespace PotionCraftBookmarkOrganizer.Scripts.Patches
                     };
                     subBookmarkPositions[spawnPosition.Item1].Add((serializedBookmark, bookmark.recipeIndex));
                 });
+
                 serialized.serializedRails = instance.rails.Select(rail => GetSerialized(rail, subBookmarkPositions)).ToList();
+
+                DoFailsafeIfNeeded(instance, serialized, subBookmarkPositions, defaultSpawnPosition);
+
                 //Since we messed with the order of the bookmarks we need to change the saved recipe order to ensure recipes are in their proper bookmarks on load (if the mod gets uninstalled)
                 RearrangeSavedBookmarksToWorkForBookmarkOrder(serialized, subBookmarkPositions);
             }, null, true);
             result = serialized;
             return false;
+        }
+
+        private static Tuple<BookmarkRail, Vector2> MoveDefaultSpawnPosition(Tuple<BookmarkRail, Vector2> defaultSpawnPosition)
+        {
+            defaultSpawnPosition = new Tuple<BookmarkRail, Vector2>(defaultSpawnPosition.Item1, new Vector2(defaultSpawnPosition.Item2.x + 0.09952f, defaultSpawnPosition.Item2.y));
+            return defaultSpawnPosition;
+        }
+
+        private static void DoFailsafeIfNeeded(BookmarkController instance, SerializedBookmarkController serialized, Dictionary<BookmarkRail, List<(SerializedBookmark, int)>> subBookmarkPositions, Tuple<BookmarkRail, Vector2> defaultSpawnPosition)
+        {
+            var missingBookmarkCount = Managers.SaveLoad.SelectedProgressState.savedRecipes.Count - serialized.serializedRails.Take(serialized.serializedRails.Count - 2).Sum(r => r.serializedBookmarks.Count);
+            if (missingBookmarkCount > 0)
+            {
+                var errorMessage = "ERROR: There are not enough saved bookmarks when saving. Running failsafe to fix file!";
+                Plugin.PluginLogger.LogError(errorMessage);
+                Ex.SaveErrorMessage(errorMessage);
+
+                for (var i = 0; i < missingBookmarkCount; i++)
+                {
+                    //Make sure we never put two bookmarks at exactly the same position to ensure reliable indexing
+                    defaultSpawnPosition = MoveDefaultSpawnPosition(defaultSpawnPosition);
+
+                    var spawnPosition = GetSpawnPosition(instance, SpaceType.Large, subBookmarkPositions)
+                                    ?? GetSpawnPosition(instance, SpaceType.Medium, subBookmarkPositions)
+                                    ?? GetSpawnPosition(instance, SpaceType.Small, subBookmarkPositions)
+                                    ?? GetSpawnPosition(instance, SpaceType.Min, subBookmarkPositions)
+                                    ?? defaultSpawnPosition
+                                    ?? new Tuple<BookmarkRail, Vector2>(instance.rails[0], Vector2.zero);
+
+                    if (!subBookmarkPositions.ContainsKey(spawnPosition.Item1))
+                    {
+                        subBookmarkPositions[spawnPosition.Item1] = new List<(SerializedBookmark, int)>();
+                    }
+                    var serializedBookmark = new SerializedBookmark
+                    {
+                        position = spawnPosition.Item2,
+                        prefabIndex = 0,
+                        isMirrored = false
+                    };
+                    subBookmarkPositions[spawnPosition.Item1].Add((serializedBookmark, -1));
+                }
+                serialized.serializedRails = instance.rails.Select(rail => GetSerialized(rail, subBookmarkPositions)).ToList();
+            }
         }
 
         private static void RearrangeSavedBookmarksToWorkForBookmarkOrder(SerializedBookmarkController serialized, Dictionary<BookmarkRail, List<(SerializedBookmark, int)>> subBookmarkPositions)
@@ -78,7 +140,7 @@ namespace PotionCraftBookmarkOrganizer.Scripts.Patches
                 serialized.serializedRails[ri].serializedBookmarks.ForEach(sb =>
                 {
                     var newIndex = intList.Count;
-                    if (!TryFirst(subBookmarkList, b => b.Item1 == sb, out (SerializedBookmark, int) subBookmarkIndex))
+                    if (!TryFirst(subBookmarkList, b => b.Item1 == sb, out var subBookmarkIndex))
                     {
                         intList.Add((intList.Count - addedSubBookmarks, newIndex));
                         return;
@@ -87,15 +149,58 @@ namespace PotionCraftBookmarkOrganizer.Scripts.Patches
                     addedSubBookmarks++;
                 });
             }
+
             var recipeList = new List<SerializedPotionRecipe>();
             for (var i = 0; i < Managers.SaveLoad.SelectedProgressState.savedRecipes.Count; i++)
             {
-                recipeList.Add(Managers.SaveLoad.SelectedProgressState.savedRecipes[intList[i].Item1]);
+                var oldIndex = intList[i].Item1;
+
+                oldIndex = GetRecipeIndexForFailsafeIfNeeded(intList, i, oldIndex);
+                recipeList.Add(Managers.SaveLoad.SelectedProgressState.savedRecipes[oldIndex]);
             }
             Managers.SaveLoad.SelectedProgressState.savedRecipes = recipeList;
 
             //Invert our intList so it can be used on load to fix the order of the saved recipes
             StaticStorage.SavedRecipePositions = intList.OrderBy(i => i.Item1).Select(i => i.Item2).ToList();
+        }
+
+        private static int GetRecipeIndexForFailsafeIfNeeded(List<(int, int)> intList, int newIndex, int oldIndex)
+        {
+            //If we ran the failsafe earlier then that index will have a -1.
+            //The recipe for the missing bookmark must be found at this point.
+            if (oldIndex == -1)
+            {
+                //Find the first missing index
+                for (var i2 = 0; i2 < Managers.SaveLoad.SelectedProgressState.savedRecipes.Count; i2++)
+                {
+                    if (intList.Any(item => item.Item1 == i2)) continue;
+                    oldIndex = i2;
+                    intList[newIndex] = new(i2, intList[newIndex].Item2);
+
+                    var firstBookmarkGroup = StaticStorage.BookmarkGroups.Values.FirstOrDefault();
+                    if (firstBookmarkGroup == null)
+                    {
+                        firstBookmarkGroup = new List<BookmarkStorage>();
+                        StaticStorage.BookmarkGroups[0] = firstBookmarkGroup;
+                    }
+                    var position = firstBookmarkGroup.FirstOrDefault()?.SerializedBookmark?.position ?? new Vector2(0.5f, 0);
+                    position = new Vector2(position.x + 0.09953334f, position.y);
+                    firstBookmarkGroup.Add(new BookmarkStorage
+                    {
+                        recipeIndex = i2,
+                        SerializedBookmark = new SerializedBookmark
+                        {
+                            position = position,
+                            prefabIndex = 0,
+                            isMirrored = false
+                        }
+                    });
+
+                    break;
+                }
+            }
+
+            return oldIndex;
         }
 
         private static SerializedBookmarkRail GetSerialized(BookmarkRail rail, Dictionary<BookmarkRail, List<(SerializedBookmark, int)>> subBookmarks)
