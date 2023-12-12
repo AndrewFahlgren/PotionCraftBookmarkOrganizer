@@ -1,4 +1,5 @@
-﻿using HarmonyLib;
+﻿
+using HarmonyLib;
 using PotionCraft.ManagersSystem;
 using PotionCraft.ObjectBased.UIElements.Bookmarks;
 using PotionCraft.ObjectBased.UIElements.Books.RecipeBook;
@@ -33,7 +34,7 @@ namespace PotionCraftBookmarkOrganizer.Scripts.Patches
 
         private static bool DisableGrabbingForInactiveStaticBookmark(BookmarkButtonInactive instance)
         {
-            var bookmark = typeof(BookmarkButtonInactive).GetField("bookmark", BindingFlags.NonPublic | BindingFlags.Instance).GetValue(instance) as Bookmark;
+            var bookmark = instance.bookmark;
             if (bookmark != StaticStorage.StaticBookmark) return true;
             //Set the parent recipe of this group to be active
             var recipeIndex = RecipeBookService.GetBookmarkStorageRecipeIndexForSelectedRecipe();

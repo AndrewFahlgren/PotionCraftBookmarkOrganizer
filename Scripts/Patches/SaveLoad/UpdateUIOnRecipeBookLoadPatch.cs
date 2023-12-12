@@ -46,7 +46,7 @@ namespace PotionCraftBookmarkOrganizer.Scripts.Patches
             //Check for missing bookmarks
             if (!missingBookmarks.Any()) return;
 
-            Plugin.PluginLogger.LogError($"ERROR: Not all bookmarks are showing on subrail on load! Adding missing bookmarks to subrail.");
+            Plugin.PluginLogger.LogError($"ERROR:  Not all bookmarks are showing on subrail on load! Adding missing bookmarks to subrail.");
 
             missingBookmarks.ForEach(savedBookmark =>
             {

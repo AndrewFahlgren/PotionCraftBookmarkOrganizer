@@ -137,16 +137,19 @@ namespace PotionCraftBookmarkOrganizer.Scripts.Patches
             var pageContainer = Managers.Potion.recipeBook.transform.Find("ContentContainer").Find("BackgroundPages");
             subRailPages.transform.parent = pageContainer;
 
+            Plugin.PluginLogger.LogMessage("SetupBookmarkContainer-1");
 
             var maskSprite = SaveLoadService.GenerateSpriteFromImage($"PotionCraftBookmarkOrganizer.InGameImages.Bookmark_organizer_recipe_slot_bottom_left_mask.png", null, true);
             if (maskSprite == null) return (null, null);
 
+            Plugin.PluginLogger.LogMessage("SetupBookmarkContainer-2");
 
-            var copyFromRenderer = typeof(RecipeBookLeftPageContent).GetField("titleDecorRenderer", BindingFlags.NonPublic | BindingFlags.Instance).GetValue(page) as SpriteRenderer;
+            var copyFromRenderer = typeof(RecipeBookLeftPageContent).GetField("titleDecorLeftRenderer", BindingFlags.NonPublic | BindingFlags.Instance).GetValue(page) as SpriteRenderer;
             var sortingLayerId = copyFromRenderer.sortingLayerID;
             var sortingLayerName = copyFromRenderer.sortingLayerName;
             var layerCount = 4;
             var currentSortOrder = 511;
+            Plugin.PluginLogger.LogMessage("SetupBookmarkContainer-3");
             for (var i = layerCount - 1; i >= 0; i--)
             {
                 //Create a game object for this specific page
@@ -191,13 +194,16 @@ namespace PotionCraftBookmarkOrganizer.Scripts.Patches
                 //Add 20 to the sorting layer to emulate pages used for the main bookmark rails
                 currentSortOrder += 20;
             }
+            Plugin.PluginLogger.LogMessage("SetupBookmarkContainer-4");
 
             StaticStorage.SubRailActiveBookmarkLayer = CreateBookmarkLayer(subRailBookmarkContainer, maskSprite, sortingLayerId, sortingLayerName, currentSortOrder - 11, "ActiveBookmarkLayer").Item1;
             StaticStorage.SubRailLayers.Reverse();
 
+            Plugin.PluginLogger.LogMessage("SetupBookmarkContainer-5");
             //Position the sprite at the bottom left corner of the page
             subRailBookmarkContainer.transform.localPosition = new Vector2(-7.594f, -4.13f); //new Vector2(-8.17f, -4.1f);
 
+            Plugin.PluginLogger.LogMessage("SetupBookmarkContainer-6");
             subRailPages.transform.localPosition = new Vector2(-7.165f, -4.07f); //new Vector2(-7.181f, -4.082f); TODO apply this everywhere else
             return (subRailPages, subRailBookmarkContainer);
         }
@@ -244,13 +250,31 @@ namespace PotionCraftBookmarkOrganizer.Scripts.Patches
 
         private static void ShrinkDescriptionBox(RecipeBookLeftPageContent parentPage)
         {
-            var descriptionBorder = parentPage.transform.Find("Description");
-            var inputFieldCanvasLines = parentPage.potionCustomizationPanel.transform.Find("InputFieldCanvas").transform.Find("Maskable");
+            var inputFieldCanvas = parentPage.potionCustomizationPanel.transform.Find("InputFieldCanvas").transform;
+            var descriptionTop = inputFieldCanvas.Find("DescriptionTop");
+            var descriptionBottom = inputFieldCanvas.Find("DescriptionBottom");
+            var descriptionBorderTop = inputFieldCanvas.Find("DescriptionBackground Top");
+            var descriptionBorderBottom = inputFieldCanvas.Find("DescriptionBackground Bottom");
+            var descriptionBorderLeft = inputFieldCanvas.Find("DescriptionBackground Left");
+            var descriptionBorderRight = inputFieldCanvas.Find("DescriptionBackground Right");
+            var inputFieldCanvasLines = inputFieldCanvas.Find("Maskable");
             var positionOffset = new Vector3(0.3309f, 0);
-            descriptionBorder.transform.localPosition += positionOffset;
+            descriptionBorderTop.transform.localPosition += positionOffset;
+            descriptionBorderBottom.transform.localPosition += positionOffset;
+            descriptionTop.transform.localPosition += positionOffset;
+            descriptionBottom.transform.localPosition += positionOffset;
             inputFieldCanvasLines.transform.localPosition += positionOffset;
+            positionOffset = new Vector3(0.02f, 0);
+            descriptionBorderRight.transform.localPosition += positionOffset;
+            positionOffset = new Vector3(0.64f, 0);
+            descriptionBorderLeft.transform.localPosition += positionOffset;
+            var sourceScale = descriptionBorderTop.transform.localScale;
+            var borderScale = new Vector3(sourceScale.x * 0.9018f, sourceScale.y, sourceScale.z);
+            descriptionBorderTop.transform.localScale = borderScale;
+            descriptionBorderBottom.transform.localScale = borderScale;
+            descriptionTop.transform.localScale = borderScale;
+            descriptionBottom.transform.localScale = borderScale;
             var scale = new Vector3(0.9018f, 1f, 1f);
-            descriptionBorder.transform.localScale = scale;
             inputFieldCanvasLines.transform.localScale = scale;
         }
     }

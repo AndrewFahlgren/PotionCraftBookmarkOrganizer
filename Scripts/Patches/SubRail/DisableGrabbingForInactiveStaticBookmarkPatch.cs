@@ -32,7 +32,7 @@ namespace PotionCraftBookmarkOrganizer.Scripts.Patches
 
         private static bool DisableGrabbingForInactiveStaticBookmark(BookmarkButtonInactive instance)
         {
-            var bookmark = typeof(BookmarkButtonInactive).GetField("bookmark", BindingFlags.NonPublic | BindingFlags.Instance).GetValue(instance) as Bookmark;
+            var bookmark = instance.bookmark;
             return bookmark != StaticStorage.StaticBookmark;
         }
     }

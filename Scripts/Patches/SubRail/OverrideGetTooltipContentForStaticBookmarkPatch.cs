@@ -33,7 +33,7 @@ namespace PotionCraftBookmarkOrganizer.Scripts.Patches
         {
             if (bookmark != StaticStorage.StaticBookmark) return true;
             var parentRecipeIndex = RecipeBookService.GetBookmarkStorageRecipeIndexForSelectedRecipe();
-            __result = Managers.Potion.recipeBook.savedRecipes[parentRecipeIndex]?.GetTooltipContent(1, false);
+            __result = Managers.Potion.recipeBook.savedRecipes[parentRecipeIndex]?.GetTooltipContent(1, null, false);
             return false;
         }
     }
