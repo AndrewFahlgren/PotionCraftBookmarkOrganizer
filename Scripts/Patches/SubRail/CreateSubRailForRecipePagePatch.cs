@@ -137,19 +137,16 @@ namespace PotionCraftBookmarkOrganizer.Scripts.Patches
             var pageContainer = Managers.Potion.recipeBook.transform.Find("ContentContainer").Find("BackgroundPages");
             subRailPages.transform.parent = pageContainer;
 
-            Plugin.PluginLogger.LogMessage("SetupBookmarkContainer-1");
 
             var maskSprite = SaveLoadService.GenerateSpriteFromImage($"PotionCraftBookmarkOrganizer.InGameImages.Bookmark_organizer_recipe_slot_bottom_left_mask.png", null, true);
             if (maskSprite == null) return (null, null);
 
-            Plugin.PluginLogger.LogMessage("SetupBookmarkContainer-2");
 
             var copyFromRenderer = typeof(RecipeBookLeftPageContent).GetField("titleDecorLeftRenderer", BindingFlags.NonPublic | BindingFlags.Instance).GetValue(page) as SpriteRenderer;
             var sortingLayerId = copyFromRenderer.sortingLayerID;
             var sortingLayerName = copyFromRenderer.sortingLayerName;
             var layerCount = 4;
             var currentSortOrder = 511;
-            Plugin.PluginLogger.LogMessage("SetupBookmarkContainer-3");
             for (var i = layerCount - 1; i >= 0; i--)
             {
                 //Create a game object for this specific page
@@ -194,16 +191,13 @@ namespace PotionCraftBookmarkOrganizer.Scripts.Patches
                 //Add 20 to the sorting layer to emulate pages used for the main bookmark rails
                 currentSortOrder += 20;
             }
-            Plugin.PluginLogger.LogMessage("SetupBookmarkContainer-4");
 
             StaticStorage.SubRailActiveBookmarkLayer = CreateBookmarkLayer(subRailBookmarkContainer, maskSprite, sortingLayerId, sortingLayerName, currentSortOrder - 11, "ActiveBookmarkLayer").Item1;
             StaticStorage.SubRailLayers.Reverse();
 
-            Plugin.PluginLogger.LogMessage("SetupBookmarkContainer-5");
             //Position the sprite at the bottom left corner of the page
             subRailBookmarkContainer.transform.localPosition = new Vector2(-7.594f, -4.13f); //new Vector2(-8.17f, -4.1f);
 
-            Plugin.PluginLogger.LogMessage("SetupBookmarkContainer-6");
             subRailPages.transform.localPosition = new Vector2(-7.165f, -4.07f); //new Vector2(-7.181f, -4.082f); TODO apply this everywhere else
             return (subRailPages, subRailBookmarkContainer);
         }
