@@ -10,7 +10,7 @@ namespace PotionCraftBookmarkOrganizer
     public class Plugin : BaseUnityPlugin
     {
         public const string PLUGIN_GUID = "com.fahlgorithm.potioncraftbookmarkorganizer";
-        public const string PLUGIN_VERSION = "1.1.0.0";
+        public const string PLUGIN_VERSION = "2.0.0.0";
 
         public static ManualLogSource PluginLogger {get; private set; }
 
