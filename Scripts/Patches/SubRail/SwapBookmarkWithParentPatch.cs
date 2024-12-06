@@ -79,7 +79,7 @@ namespace PotionCraftBookmarkOrganizer.Scripts.Patches
             }
             //Empty bookmarks should never be able to swap with the static bookmark
             if (instance.activeBookmarkButton.normalSpriteIcon == null) return;
-            var index = Managers.Potion.recipeBook.bookmarkControllersGroupController.GetAllBookmarksList().IndexOf(instance);
+            var index = RecipeBook.Instance.bookmarkControllersGroupController.GetAllBookmarksList().IndexOf(instance);
             var groupIndex = RecipeBookService.GetBookmarkStorageRecipeIndex(index, out bool indexIsParent);
             //Do not allow swaps from outside the group
             if (groupIndex != RecipeBookService.GetBookmarkStorageRecipeIndexForSelectedRecipe()) return;

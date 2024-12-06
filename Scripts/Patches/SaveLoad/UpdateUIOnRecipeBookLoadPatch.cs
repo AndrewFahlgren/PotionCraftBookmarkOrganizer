@@ -37,9 +37,9 @@ namespace PotionCraftBookmarkOrganizer.Scripts.Patches
 
         private static void EnsureSubBookmarksAreShowingFailsafe()
         {
-            var pageIndex = Managers.Potion.recipeBook.currentPageIndex;
+            var pageIndex = RecipeBook.Instance.currentPageIndex;
             var groupIndex = RecipeBookService.GetBookmarkStorageRecipeIndex(pageIndex);
-            var allBookmarks = Managers.Potion.recipeBook.bookmarkControllersGroupController.GetAllBookmarksList();
+            var allBookmarks = RecipeBook.Instance.bookmarkControllersGroupController.GetAllBookmarksList();
             var saved = SubRailService.GetSubRailRecipesForIndex(groupIndex).Select(s => new { savedBookmark = s, bookmark = allBookmarks[s.recipeIndex], isActive = pageIndex == s.recipeIndex }).ToList();
             var missingBookmarks = saved.Where(sb => StaticStorage.SubRail.railBookmarks.All(rb => sb.bookmark != rb)).ToList();
 

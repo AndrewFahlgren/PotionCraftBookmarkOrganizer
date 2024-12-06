@@ -99,14 +99,14 @@ namespace PotionCraftBookmarkOrganizer.Scripts.Patches
         {
             //Hide the static rails and show the real sub rail
             SubRailService.ShowSubRailAfterFlip();
-            var recipeBook = Managers.Potion.recipeBook;
+            var recipeBook = RecipeBook.Instance;
             //Fix the subrail for a cancelled page turn with the current index
             SubRailService.UpdateSubRailForSelectedIndex(recipeBook.currentPageIndex);
         }
 
         private static void MoveBookmarksToAndFromInvisiRail(CurlPageController instance, int nextPageIndex, bool showStaticRails = true)
         {
-            if (instance.book != Managers.Potion.recipeBook) return;
+            if (instance.book != RecipeBook.Instance) return;
 
             if (showStaticRails)
             {

@@ -21,9 +21,9 @@ namespace PotionCraftBookmarkOrganizer.Scripts.Patches
         [HarmonyPatch(typeof(RecipeBook), "EraseRecipe")]
         public class RecipeBook_EraseRecipe
         {
-            static bool Prefix(RecipeBook __instance, ref Potion potion)
+            static bool Prefix(RecipeBook __instance, ref IRecipeBookPageContent recipe)
             {
-                return MoveSubRailBookmarkOnRecipeErase(__instance, ref potion);
+                return MoveSubRailBookmarkOnRecipeErase(__instance, ref recipe);
             }
 
             static void Postfix()
@@ -42,7 +42,7 @@ namespace PotionCraftBookmarkOrganizer.Scripts.Patches
         }
 
         private static int? ShowPageAfterRecipeDeleteIndex;
-        private static bool MoveSubRailBookmarkOnRecipeErase(RecipeBook instance, ref Potion potion) //TODO we need to tie into the get next non empty page method and redirect it to the proper bookmark
+        private static bool MoveSubRailBookmarkOnRecipeErase(RecipeBook instance, ref IRecipeBookPageContent potion) //TODO we need to tie into the get next non empty page method and redirect it to the proper bookmark
         {
             var localPotion = potion;
             Ex.RunSafe(() =>
@@ -63,7 +63,7 @@ namespace PotionCraftBookmarkOrganizer.Scripts.Patches
                 index = newParent.recipeIndex;
                 RecipeBookService.PromoteIndexToParent(newParent.recipeIndex);
 
-                localPotion = Managers.Potion.recipeBook.savedRecipes[newParent.recipeIndex];
+                localPotion = RecipeBook.Instance.savedRecipes[newParent.recipeIndex] as Potion;
             });
             if (localPotion != potion) potion = localPotion;
             return true;

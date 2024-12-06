@@ -4,7 +4,6 @@ using PotionCraft.ObjectBased.UIElements.Bookmarks;
 using PotionCraft.ObjectBased.UIElements.Books;
 using PotionCraft.ObjectBased.UIElements.Books.RecipeBook;
 using PotionCraft.ObjectBased.UIElements.PotionCraftPanel;
-using PotionCraft.ObjectBased.UIElements.Tooltip;
 using PotionCraft.ScriptableObjects;
 using PotionCraftBookmarkOrganizer.Scripts.ClassOverrides;
 using PotionCraftBookmarkOrganizer.Scripts.Services;

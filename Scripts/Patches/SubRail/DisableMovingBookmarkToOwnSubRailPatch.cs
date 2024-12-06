@@ -40,7 +40,7 @@ namespace PotionCraftBookmarkOrganizer.Scripts.Patches
 
             var isParent = RecipeBookService.IsBookmarkGroupParent(bookmarkIndex);
             //We need to prevent bookmarks being dragged onto their own subrails and we need to prevent other recipe groups from being dragged onto a subrail at all
-            if (bookmarkIndex != Managers.Potion.recipeBook.currentPageIndex && !isParent) return true;
+            if (bookmarkIndex != RecipeBook.Instance.currentPageIndex && !isParent) return true;
 
             var mouseWorldPosition = Managers.Input.controlsProvider.CurrentMouseWorldPosition;
             var newRail = instance.bookmarkController.rails.Except(new[] { instance })

@@ -43,7 +43,7 @@ namespace PotionCraftBookmarkOrganizer.Scripts.Services
             //Before we mess with indexes update the static bookmark to match this recipe
             UpdateStaticBookmark(pageIndex);
             var groupIndex = RecipeBookService.GetBookmarkStorageRecipeIndex(pageIndex);
-            var allBookmarks = Managers.Potion.recipeBook.bookmarkControllersGroupController.GetAllBookmarksList();
+            var allBookmarks = RecipeBook.Instance.bookmarkControllersGroupController.GetAllBookmarksList();
             var saved = GetSubRailRecipesForIndex(groupIndex).Select(s => new { savedBookmark = s, bookmark = allBookmarks[s.recipeIndex], isActive = pageIndex == s.recipeIndex }).ToList();
             //Check to see if we actually need to switch bookmarks on page turn or if we are in the same recipe group
             if (saved.Any(sb => StaticStorage.SubRail.railBookmarks.Any(rb => sb.bookmark == rb)))
@@ -90,7 +90,7 @@ namespace PotionCraftBookmarkOrganizer.Scripts.Services
 
         public static void UpdateStaticBookmark(int nextPageIndex = -1)
         {
-            var recipeBook = Managers.Potion.recipeBook;
+            var recipeBook = RecipeBook.Instance;
             if (nextPageIndex == -1) nextPageIndex = recipeBook.currentPageIndex;
             var index = RecipeBookService.GetBookmarkStorageRecipeIndex(nextPageIndex, out bool isparentIndex);
             var savedRecipe = recipeBook.savedRecipes[index];
@@ -108,7 +108,7 @@ namespace PotionCraftBookmarkOrganizer.Scripts.Services
 
         public static int GetPagesCountWithoutSpecialRails()
         {
-            var controller = Managers.Potion.recipeBook.bookmarkControllersGroupController.controllers.First().bookmarkController;
+            var controller = RecipeBook.Instance.bookmarkControllersGroupController.controllers.First().bookmarkController;
             return controller.rails.Except(new[] { StaticStorage.SubRail, StaticStorage.InvisiRail }).Sum(r => r.railBookmarks.Count);
         }
 
@@ -134,7 +134,7 @@ namespace PotionCraftBookmarkOrganizer.Scripts.Services
         public static void UpdateNonSubBookmarksActiveState()
         {
             var selectedParentIndex = RecipeBookService.GetBookmarkStorageRecipeIndexForSelectedRecipe();
-            var rails = Managers.Potion.recipeBook.bookmarkControllersGroupController.controllers.First().bookmarkController.rails.Except(new[] { StaticStorage.SubRail, StaticStorage.InvisiRail });                                     
+            var rails = RecipeBook.Instance.bookmarkControllersGroupController.controllers.First().bookmarkController.rails.Except(new[] { StaticStorage.SubRail, StaticStorage.InvisiRail });                                     
             var bookmarks = rails.SelectMany(r => r.railBookmarks).ToList();
             for (var i = 0; i < bookmarks.Count; i++)
             {
@@ -149,11 +149,11 @@ namespace PotionCraftBookmarkOrganizer.Scripts.Services
             var bookmarks = StaticStorage.SubRail.railBookmarks;
             var firstBookmark = bookmarks.FirstOrDefault();
             if (firstBookmark == null) return;
-            var startingSubRailIndex = Managers.Potion.recipeBook.bookmarkControllersGroupController.GetAllBookmarksList().IndexOf(firstBookmark);
+            var startingSubRailIndex = RecipeBook.Instance.bookmarkControllersGroupController.GetAllBookmarksList().IndexOf(firstBookmark);
             for (var i = 0; i < bookmarks.Count; i++)
             {
                 var trueIndex = i + startingSubRailIndex;
-                bookmarks[i].CurrentVisualState = trueIndex == Managers.Potion.recipeBook.currentPageIndex
+                bookmarks[i].CurrentVisualState = trueIndex == RecipeBook.Instance.currentPageIndex
                                                         ? Bookmark.VisualState.Active
                                                         : Bookmark.VisualState.Inactive;
             }

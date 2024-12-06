@@ -3,13 +3,13 @@ using PotionCraft.ManagersSystem;
 using PotionCraft.ObjectBased.UIElements.Bookmarks;
 using PotionCraft.ObjectBased.UIElements.Books.RecipeBook;
 using PotionCraft.ObjectBased.UIElements.PotionCraftPanel;
-using PotionCraft.ObjectBased.UIElements.Tooltip;
 using PotionCraft.ScriptableObjects;
 using PotionCraftBookmarkOrganizer.Scripts.ClassOverrides;
 using PotionCraftBookmarkOrganizer.Scripts.Services;
 using PotionCraftBookmarkOrganizer.Scripts.Storage;
 using System;
 using System.Linq;
+using TooltipSystem;
 using UnityEngine.Rendering;
 
 namespace PotionCraftBookmarkOrganizer.Scripts.Patches
@@ -33,7 +33,7 @@ namespace PotionCraftBookmarkOrganizer.Scripts.Patches
         {
             if (bookmark != StaticStorage.StaticBookmark) return true;
             var parentRecipeIndex = RecipeBookService.GetBookmarkStorageRecipeIndexForSelectedRecipe();
-            __result = Managers.Potion.recipeBook.savedRecipes[parentRecipeIndex]?.GetTooltipContent(1, null, false);
+            __result = RecipeBook.Instance.savedRecipes[parentRecipeIndex]?.GetTooltipContentForRecipeBookBrewing(1, false);
             return false;
         }
     }

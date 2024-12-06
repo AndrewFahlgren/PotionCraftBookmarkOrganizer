@@ -1,6 +1,7 @@
 ﻿using HarmonyLib;
 using PotionCraft.ManagersSystem;
 using PotionCraft.ObjectBased.UIElements.Bookmarks;
+using PotionCraft.ObjectBased.UIElements.Books.RecipeBook;
 using PotionCraft.SaveLoadSystem;
 using PotionCraftBookmarkOrganizer.Scripts.Services;
 using PotionCraftBookmarkOrganizer.Scripts.Storage;
@@ -25,7 +26,7 @@ namespace PotionCraftBookmarkOrganizer.Scripts.Patches
 
         private static void RemoveSubBookmarksFromMainRailsOnLoad(BookmarkController instance)
         {
-            if (instance != Managers.Potion.recipeBook.bookmarkControllersGroupController.controllers.First().bookmarkController) return;
+            if (instance != RecipeBook.Instance.bookmarkControllersGroupController.controllers.First().bookmarkController) return;
             //If there are no saved recipe positions then there is nothing to remove
             if (StaticStorage.SavedRecipePositions == null || !StaticStorage.SavedRecipePositions.Any())
             {
@@ -80,7 +81,7 @@ namespace PotionCraftBookmarkOrganizer.Scripts.Patches
         private static void ReorganizeSavedRecipes()
         {
             var progressState = Managers.SaveLoad.SelectedProgressState;
-            var potionList = new List<SerializedPotionRecipe>();
+            var potionList = new List<SerializedRecipe>();
             for (var i = 0; i < progressState.savedRecipes.Count; i++)
             {
                 potionList.Add(progressState.savedRecipes[StaticStorage.SavedRecipePositions[i]]);
@@ -91,8 +92,8 @@ namespace PotionCraftBookmarkOrganizer.Scripts.Patches
         //The actual cause of this issue may now be fixed however there may still be save files which are in a messed up state
         private static void DoIncorrectCountFailsafe()
         {
-            var bookmarkCount = Managers.Potion.recipeBook.bookmarkControllersGroupController.GetAllBookmarksList().Count;
-            var recipeCount = StaticStorage.SavedRecipePositions?.Count ?? Managers.Potion.recipeBook.savedRecipes.Count;
+            var bookmarkCount = RecipeBook.Instance.bookmarkControllersGroupController.GetAllBookmarksList().Count;
+            var recipeCount = StaticStorage.SavedRecipePositions?.Count ?? RecipeBook.Instance.savedRecipes.Count;
             if (bookmarkCount == recipeCount) return;
             var errorMessage = "ERROR: There is an incorrect ammount of bookmarks saved. Running failsafe to fix file! - 2";
             Plugin.PluginLogger.LogError(errorMessage);
@@ -115,7 +116,7 @@ namespace PotionCraftBookmarkOrganizer.Scripts.Patches
         private static void DoHardResetIfNeeded(BookmarkController instance)
         {
             //There is a bug where saved recipe positions do not save meaning we also need to do a failsafe here
-            var bookmarkCount = Managers.Potion.recipeBook.bookmarkControllersGroupController.GetAllBookmarksList().Count;
+            var bookmarkCount = RecipeBook.Instance.bookmarkControllersGroupController.GetAllBookmarksList().Count;
             var recipeCount = Managers.SaveLoad.SelectedProgressState.savedRecipes.Count;
             if (bookmarkCount == recipeCount) return;
             var errorMessage = "ERROR: There is an incorrect ammount of bookmarks saved. Running failsafe to fix file! - 1";

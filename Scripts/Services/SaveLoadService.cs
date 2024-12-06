@@ -51,9 +51,8 @@ namespace PotionCraftBookmarkOrganizer.Scripts.Services
         /// <summary>
         /// Reads the raw json string to find our custom field and parse any bookmark groups within it
         /// </summary>
-        public static bool RetreiveStoredBookmarkGroups(Type type)
+        public static bool RetreiveStoredBookmarkGroups()
         {
-            if (type != typeof(ProgressState)) return true;
             var stateJsonString = StaticStorage.StateJsonString;
             StaticStorage.StateJsonString = null;
             if (string.IsNullOrEmpty(stateJsonString))
@@ -122,14 +121,14 @@ namespace PotionCraftBookmarkOrganizer.Scripts.Services
             Texture2D texture;
             if (createComplexMesh)
             {
-                texture = new Texture2D(0, 0, TextureFormat.ARGB32, false, false)
+                texture = new Texture2D(2, 2, TextureFormat.ARGB32, false, false)
                 {
                     filterMode = FilterMode.Bilinear
                 };
             }
             else
             {
-                texture = new Texture2D(0, 0, UnityEngine.Experimental.Rendering.GraphicsFormat.R8G8B8A8_UNorm, UnityEngine.Experimental.Rendering.TextureCreationFlags.None)
+                texture = new Texture2D(2, 2, UnityEngine.Experimental.Rendering.GraphicsFormat.R8G8B8A8_UNorm, UnityEngine.Experimental.Rendering.TextureCreationFlags.None)
                 {
                     filterMode = FilterMode.Bilinear
                 };

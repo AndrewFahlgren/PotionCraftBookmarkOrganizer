@@ -1,11 +1,11 @@
 ﻿using HarmonyLib;
 using PotionCraft.ManagersSystem;
 using PotionCraft.ObjectBased.InteractiveItem;
+using PotionCraft.ObjectBased.UIElements.AlchemySubstanceCustomizationPanelSystem;
 using PotionCraft.ObjectBased.UIElements.Bookmarks;
 using PotionCraft.ObjectBased.UIElements.Books;
 using PotionCraft.ObjectBased.UIElements.Books.RecipeBook;
 using PotionCraft.ObjectBased.UIElements.PotionCraftPanel;
-using PotionCraft.ObjectBased.UIElements.PotionCustomizationPanel;
 using PotionCraft.ScriptableObjects;
 using PotionCraftBookmarkOrganizer.Scripts.ClassOverrides;
 using PotionCraftBookmarkOrganizer.Scripts.Services;
@@ -24,16 +24,16 @@ namespace PotionCraftBookmarkOrganizer.Scripts.Patches
     { 
         //This method is chosen because it runs during the RecipeBookLeftPageContent load callback.
         //This gives access to the left page content and is ensured to run after the recipe book is setup.
-        [HarmonyPatch(typeof(PotionCustomizationPanel), "OnPanelContainerStart")]
+        [HarmonyPatch(typeof(AlchemySubstanceCustomizationPanel), "OnPanelContainerStart")]
         public class PotionCustomizationPanel_OnPanelContainerStart
         {
-            static void Postfix(PotionCustomizationPanel __instance)
+            static void Postfix(AlchemySubstanceCustomizationPanel __instance)
             {
                 Ex.RunSafe(() => CreateSubRailForRecipePage(__instance));
             }
         }
 
-        private static void CreateSubRailForRecipePage(PotionCustomizationPanel instance)
+        private static void CreateSubRailForRecipePage(AlchemySubstanceCustomizationPanel instance)
         {
             var parentPage = instance.gameObject.GetComponentInParent<RecipeBookLeftPageContent>();
             if (parentPage == null) return;
@@ -54,14 +54,14 @@ namespace PotionCraftBookmarkOrganizer.Scripts.Patches
 
         private static void SetupRail(GameObject subRailPages, GameObject subRailBookmarkContainer)
         {
-            var parentController = Managers.Potion.recipeBook.bookmarkControllersGroupController.controllers.First().bookmarkController;
+            var parentController = RecipeBook.Instance.bookmarkControllersGroupController.controllers.First().bookmarkController;
             var railGameObject = new GameObject(StaticStorage.SubRailName);
             railGameObject.transform.parent = parentController.gameObject.transform;
             railGameObject.transform.localPosition = subRailBookmarkContainer.transform.localPosition;
 
             var subRail = railGameObject.AddComponent<BookmarkRail>();
             StaticStorage.SubRail = subRail;
-            var parent = Managers.Potion.recipeBook.bookmarkControllersGroupController.controllers.First().bookmarkController;
+            var parent = RecipeBook.Instance.bookmarkControllersGroupController.controllers.First().bookmarkController;
             railGameObject.transform.parent = parent.transform;
             subRailBookmarkContainer.transform.parent = subRail.transform;
             subRailBookmarkContainer.transform.localPosition = Vector2.zero;
@@ -100,7 +100,7 @@ namespace PotionCraftBookmarkOrganizer.Scripts.Patches
 
         private static void SetupInvisiRail()
         {
-            var parentController = Managers.Potion.recipeBook.bookmarkControllersGroupController.controllers.First().bookmarkController;
+            var parentController = RecipeBook.Instance.bookmarkControllersGroupController.controllers.First().bookmarkController;
             var railGameObject = new GameObject(StaticStorage.InvisiRailName);
             railGameObject.transform.localPosition = new Vector2(0, 300);
             railGameObject.transform.parent = parentController.gameObject.transform;
@@ -111,7 +111,7 @@ namespace PotionCraftBookmarkOrganizer.Scripts.Patches
 
             var invisiRail = railGameObject.AddComponent<BookmarkRail>();
             StaticStorage.InvisiRail = invisiRail;
-            var parent = Managers.Potion.recipeBook.bookmarkControllersGroupController.controllers.First().bookmarkController;
+            var parent = RecipeBook.Instance.bookmarkControllersGroupController.controllers.First().bookmarkController;
             railGameObject.transform.parent = parent.transform;
             bookmarkContainer.transform.parent = invisiRail.transform;
             bookmarkContainer.transform.localPosition = Vector2.zero;
@@ -134,7 +134,7 @@ namespace PotionCraftBookmarkOrganizer.Scripts.Patches
             var subRailBookmarkContainer = new GameObject("SubRailBookmarkContainer");
             var subRailPages = new GameObject("SubRailPages");
             StaticStorage.SubRailPages = subRailPages;
-            var pageContainer = Managers.Potion.recipeBook.transform.Find("ContentContainer").Find("BackgroundPages");
+            var pageContainer = RecipeBook.Instance.transform.Find("ContentContainer").Find("BackgroundPages");
             subRailPages.transform.parent = pageContainer;
 
 
@@ -142,7 +142,8 @@ namespace PotionCraftBookmarkOrganizer.Scripts.Patches
             if (maskSprite == null) return (null, null);
 
 
-            var copyFromRenderer = typeof(RecipeBookLeftPageContent).GetField("titleDecorLeftRenderer", BindingFlags.NonPublic | BindingFlags.Instance).GetValue(page) as SpriteRenderer;
+            var decorController = typeof(RecipeBookLeftPageContent).GetField("titleDecorController", BindingFlags.NonPublic | BindingFlags.Instance).GetValue(page) as RecipeBookLeftPageTitleDecorController;
+            var copyFromRenderer = typeof(RecipeBookLeftPageTitleDecorController).GetField("decorLeftRenderer", BindingFlags.NonPublic | BindingFlags.Instance).GetValue(decorController) as SpriteRenderer;
             var sortingLayerId = copyFromRenderer.sortingLayerID;
             var sortingLayerName = copyFromRenderer.sortingLayerName;
             var layerCount = 4;
@@ -244,7 +245,7 @@ namespace PotionCraftBookmarkOrganizer.Scripts.Patches
 
         private static void ShrinkDescriptionBox(RecipeBookLeftPageContent parentPage)
         {
-            var inputFieldCanvas = parentPage.potionCustomizationPanel.transform.Find("InputFieldCanvas").transform;
+            var inputFieldCanvas = parentPage.customizationPanelController.customizationPanel.transform.Find("InputFieldCanvas").transform;
             var descriptionTop = inputFieldCanvas.Find("DescriptionTop");
             var descriptionBottom = inputFieldCanvas.Find("DescriptionBottom");
             var descriptionBorderTop = inputFieldCanvas.Find("DescriptionBackground Top");
@@ -270,6 +271,30 @@ namespace PotionCraftBookmarkOrganizer.Scripts.Patches
             descriptionBottom.transform.localScale = borderScale;
             var scale = new Vector3(0.9018f, 1f, 1f);
             inputFieldCanvasLines.transform.localScale = scale;
+
+            //Update the panel settings so these changes stick when switching pages
+            var settings = new List<RecipeBookCustomizationPanelSettings>();
+            var panelTraverse = Traverse.Create(parentPage.customizationPanelController);
+            settings.Add(panelTraverse.Field<RecipeBookCustomizationPanelSettings>("potionCustomizationPanelSettings").Value);
+            settings.Add(panelTraverse.Field<RecipeBookCustomizationPanelSettings>("legendarySubstanceCustomizationPanelSettings").Value);
+
+            settings.ForEach(setting =>
+            {
+                var settingsTraverse = Traverse.Create(setting);
+                void setXValue(string name, Vector2 newValue)
+                {
+                    var fieldTraverse = settingsTraverse.Field(name);
+                    var existingValue = fieldTraverse.GetValue<Vector2>();
+                    fieldTraverse.SetValue(new Vector2(newValue.x, existingValue.y));
+                }
+
+                setXValue("descriptionBackgroundLeftPosition", descriptionBorderLeft.transform.localPosition);
+                setXValue("descriptionBackgroundRightPosition", descriptionBorderRight.transform.localPosition);
+                setXValue("descriptionBackgroundTopPosition", descriptionBorderTop.transform.localPosition);
+                setXValue("descriptionTopPosition", descriptionTop.transform.localPosition);
+                setXValue("maskablePosition", inputFieldCanvasLines.transform.localPosition);
+
+            });
         }
     }
 }

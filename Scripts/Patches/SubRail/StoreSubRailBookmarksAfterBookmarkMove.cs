@@ -31,7 +31,7 @@ namespace PotionCraftBookmarkOrganizer.Scripts.Patches
         {
             if (value != Bookmark.MovingState.Idle) return;
             RecipeBookService.UpdateBookmarkGroupsForCurrentRecipe();
-            SubRailService.UpdateSubRailForSelectedIndex(Managers.Potion.recipeBook.currentPageIndex);
+            SubRailService.UpdateSubRailForSelectedIndex(RecipeBook.Instance.currentPageIndex);
             return;
         }
     }

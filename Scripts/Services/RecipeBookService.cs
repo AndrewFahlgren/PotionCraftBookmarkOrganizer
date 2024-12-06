@@ -3,6 +3,7 @@ using PotionCraft.InputSystem;
 using PotionCraft.ManagersSystem;
 using PotionCraft.ManagersSystem.Cursor;
 using PotionCraft.ObjectBased.UIElements.Bookmarks;
+using PotionCraft.ObjectBased.UIElements.Books.RecipeBook;
 using PotionCraftBookmarkOrganizer.Scripts.Storage;
 using System;
 using System.Collections.Concurrent;
@@ -22,7 +23,7 @@ namespace PotionCraftBookmarkOrganizer.Scripts.Services
             if (!StaticStorage.AddedListeners)
             {
                 StaticStorage.AddedListeners = true;
-                Managers.Potion.recipeBook.bookmarkControllersGroupController.onBookmarksRearranged.AddListener(BookmarksRearranged);
+                RecipeBook.Instance.bookmarkControllersGroupController.onBookmarksRearranged.AddListener(BookmarksRearranged);
                 Managers.Potion.gameObject.AddComponent<BookmarkOrganizerManager>();
                 var asset = PotionCraft.Settings.Settings<CursorManagerSettings>.Asset;
                 StaticStorage.HotkeyUp = CommandInvokeRepeater.GetNewCommandInvokeRepeater(asset.invokeRepeaterSettings, new List<Command>()
@@ -38,15 +39,15 @@ namespace PotionCraftBookmarkOrganizer.Scripts.Services
 
         public static void FlipPageToNextGroup(bool flipForward)
         {
-            if (!Managers.Potion.recipeBook.isActiveAndEnabled) return;
+            if (!RecipeBook.Instance.isActiveAndEnabled) return;
             var nextGroupIndex = GetNextNonSubRecipeIndex(flipForward);
-            if (nextGroupIndex == Managers.Potion.recipeBook.currentPageIndex) return;
+            if (nextGroupIndex == RecipeBook.Instance.currentPageIndex) return;
             FlipPageToIndex(nextGroupIndex);
         }
 
         private static int GetNextNonSubRecipeIndex(bool moveForward)
         {
-            var recipeBook = Managers.Potion.recipeBook;
+            var recipeBook = RecipeBook.Instance;
             var currentPageIndex = recipeBook.currentPageIndex;
             var pagesCount = recipeBook.GetPagesCount();
             var nextIndex = currentPageIndex;
@@ -70,13 +71,13 @@ namespace PotionCraftBookmarkOrganizer.Scripts.Services
         {
             var groupIndex = GetBookmarkStorageRecipeIndex(subBookmarkIndex, out bool indexIsParent);
             if (!indexIsParent) return;
-            var bookmarkList = Managers.Potion.recipeBook.bookmarkControllersGroupController.GetAllBookmarksList();
+            var bookmarkList = RecipeBook.Instance.bookmarkControllersGroupController.GetAllBookmarksList();
             var subBookmark = bookmarkList[subBookmarkIndex];
             var groupBookmark = bookmarkList[groupIndex];
             var groupBookmarkPosition = groupBookmark.GetNormalizedPosition();
             var subBookmarkPosition = subBookmark.GetNormalizedPosition();
 
-            var bookmarkController = Managers.Potion.recipeBook.bookmarkControllersGroupController.controllers[0].bookmarkController;
+            var bookmarkController = RecipeBook.Instance.bookmarkControllersGroupController.controllers[0].bookmarkController;
             var i = 0;
             var railList = bookmarkController.rails.ToList().Select(rail => (rail, bookmarks: rail.railBookmarks.ToList())).ToList();
             railList.ForEach(rail =>
@@ -95,8 +96,8 @@ namespace PotionCraftBookmarkOrganizer.Scripts.Services
             bookmarkController.CallOnBookmarksRearrangeIfNecessary(bookmarkList);
             ignoreBookmarkRearrangeForSubBookmarkPromotion = false;
 
-            Managers.Potion.recipeBook.UpdateBookmarkIcon(groupIndex);
-            Managers.Potion.recipeBook.UpdateBookmarkIcon(subBookmarkIndex);
+            RecipeBook.Instance.UpdateBookmarkIcon(groupIndex);
+            RecipeBook.Instance.UpdateBookmarkIcon(subBookmarkIndex);
             SubRailService.UpdateStaticBookmark();
             UpdateBookmarkGroupsForCurrentRecipe();
             ShowHideGroupBookmarkIcon(groupBookmark, false);
@@ -169,12 +170,12 @@ namespace PotionCraftBookmarkOrganizer.Scripts.Services
 
         private static void DoOrphanedBookmarkFailsafe()
         {
-            Managers.Potion.recipeBook.bookmarkControllersGroupController.GetAllBookmarksList().ForEach(bookmark =>
+            RecipeBook.Instance.bookmarkControllersGroupController.GetAllBookmarksList().ForEach(bookmark =>
             {
                 if (bookmark.rail == null || !bookmark.rail.railBookmarks.Contains(bookmark))
                 {
                     Plugin.PluginLogger.LogError("ERROR: An orphaned bookmark has been found! This is the result of another error!");
-                    var controller = Managers.Potion.recipeBook.bookmarkControllersGroupController.controllers.First().bookmarkController;
+                    var controller = RecipeBook.Instance.bookmarkControllersGroupController.controllers.First().bookmarkController;
                     //Move the now empty bookmark out of the sub group
                     var spawnPosition = SubRailService.GetSpawnPosition(controller, BookmarkController.SpaceType.Large)
                                         ?? SubRailService.GetSpawnPosition(controller, BookmarkController.SpaceType.Medium)
@@ -204,7 +205,7 @@ namespace PotionCraftBookmarkOrganizer.Scripts.Services
             }
             currentlyRearranging = true;
 
-            var allBookmarks = Managers.Potion.recipeBook.bookmarkControllersGroupController.GetAllBookmarksList();
+            var allBookmarks = RecipeBook.Instance.bookmarkControllersGroupController.GetAllBookmarksList();
             var bookmarks = subRailBookmarks.Select(bookmark =>
             {
                 return new BookmarkStorage
@@ -215,18 +216,18 @@ namespace PotionCraftBookmarkOrganizer.Scripts.Services
             });
             StaticStorage.BookmarkGroups[recipeIndexForCurrentGroupUpdate] = bookmarks.ToList();
             currentlyRearranging = false;
-            var groupBookmark = Managers.Potion.recipeBook.bookmarkControllersGroupController.GetBookmarkByIndex(recipeIndexForCurrentGroupUpdate);
+            var groupBookmark = RecipeBook.Instance.bookmarkControllersGroupController.GetBookmarkByIndex(recipeIndexForCurrentGroupUpdate);
             ShowHideGroupBookmarkIcon(groupBookmark, bookmarks.Any());
         }
 
         public static int GetBookmarkStorageRecipeIndexForSelectedRecipe()
         {
-            return GetBookmarkStorageRecipeIndex(Managers.Potion.recipeBook.currentPageIndex, out bool _);
+            return GetBookmarkStorageRecipeIndex(RecipeBook.Instance.currentPageIndex, out bool _);
         }
 
         public static int GetBookmarkStorageRecipeIndexForSelectedRecipe(out bool indexIsParent)
         {
-            return GetBookmarkStorageRecipeIndex(Managers.Potion.recipeBook.currentPageIndex, out indexIsParent);
+            return GetBookmarkStorageRecipeIndex(RecipeBook.Instance.currentPageIndex, out indexIsParent);
         }
 
         public static int GetBookmarkStorageRecipeIndex(int recipeIndex)
@@ -255,7 +256,7 @@ namespace PotionCraftBookmarkOrganizer.Scripts.Services
         public static void FlipPageToIndex(int nextIndex)
         {
             if (Managers.Cursor.grabbedInteractiveItem is BookmarkButtonInactive) return;
-            var recipeBook = Managers.Potion.recipeBook;
+            var recipeBook = RecipeBook.Instance;
             var pagesCount = recipeBook.GetPagesCount();
             recipeBook.curlPageController.HotkeyClicked(nextIndex > recipeBook.currentPageIndex
                                                             ? recipeBook.currentPageIndex.Distance(nextIndex) <= nextIndex.Distance(recipeBook.currentPageIndex + pagesCount)

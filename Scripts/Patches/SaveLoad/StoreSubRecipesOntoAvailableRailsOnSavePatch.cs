@@ -33,7 +33,7 @@ namespace PotionCraftBookmarkOrganizer.Scripts.Patches
 
         private static bool AssignSubBookmarksToRailsBeforeSerialization(ref SerializedBookmarkController result, BookmarkController instance)
         {
-            if (instance != Managers.Potion.recipeBook.bookmarkControllersGroupController.controllers.First().bookmarkController) return true;
+            if (instance != RecipeBook.Instance.bookmarkControllersGroupController.controllers.First().bookmarkController) return true;
             var serialized = new SerializedBookmarkController();
             Ex.RunSafe(() =>
             {
@@ -150,7 +150,7 @@ namespace PotionCraftBookmarkOrganizer.Scripts.Patches
                 });
             }
 
-            var recipeList = new List<SerializedPotionRecipe>();
+            var recipeList = new List<SerializedRecipe>();
             for (var i = 0; i < Managers.SaveLoad.SelectedProgressState.savedRecipes.Count; i++)
             {
                 var oldIndex = intList[i].Item1;
